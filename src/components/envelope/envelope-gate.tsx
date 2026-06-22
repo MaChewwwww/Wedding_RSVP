@@ -199,7 +199,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
         // Step 3: Wait for card to finish opening (1.5s), then finish animating
         setTimeout(() => {
           setAnimating(false);
-        }, isMobile ? 50 : 1500);
+        }, 1500);
       }, 800);
     }, 250);
   }, [animating, opened, triggerBurst]);
@@ -219,20 +219,18 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
       setTimeout(() => {
         setAnimating(false);
       }, 1200);
-    }, isMobile ? 50 : 1000);
+    }, 1000);
   }, [animating, opened]);
 
   return (
     <EnvelopeContext.Provider value={{ opened, cardOpened, animating, closeEnvelope: close }}>
-      <div className="full-svh relative flex w-full flex-col items-center justify-center overflow-hidden px-4">
-        {/* 3D Scene Wrapper - Keeps 3D transforms isolated so position: fixed overlays work correctly on iOS Safari! */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0"
-          style={{
-            perspective: 1000,
-            transformStyle: "preserve-3d",
-          }}
-        >
+      <div
+      className="full-svh relative flex w-full flex-col items-center justify-center overflow-hidden px-4 preserve-3d"
+      style={{
+        perspective: 1000,
+        transformStyle: "preserve-3d",
+      }}
+    >
       {/* Zoomed background image to crop out white paper edges */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -370,7 +368,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
           transformStyle: "preserve-3d",
           perspective: 1000,
         }}
-        className="relative w-full max-w-[460px] aspect-[500/350] preserve-3d select-none z-10 pointer-events-auto"
+        className="relative w-full max-w-[460px] aspect-[500/350] preserve-3d select-none z-10"
       >
         {/* 0. Soft champagne glow directly behind the envelope */}
         <motion.div
@@ -594,9 +592,8 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
 
         {/* 6. Paper Card Stub — visual shell only; drives the rise/sink animation.
              Content is rendered in the fixed overlay below so it is always screen-centered. */}
-        {!isMobile && (
-          <motion.div
-            className="absolute left-0 right-0 rounded-xl border-4 border-rose-200 z-20"
+        <motion.div
+          className="absolute left-0 right-0 rounded-xl border-4 border-rose-200 z-20"
           style={{
             top: "5%",
             minHeight: "80px",
@@ -625,7 +622,6 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
           {/* Double border */}
           <div className="absolute inset-2.5 border border-rose/15 rounded-lg pointer-events-none" />
         </motion.div>
-        )}
 
         {/* 7. Gold Monogram Wax Seal Trigger */}
         <AnimatePresence>
@@ -763,7 +759,6 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
           )}
         </AnimatePresence>
       </motion.div>
-      </div> {/* End 3D Scene Wrapper */}
 
       {/* Fixed screen-centered card overlay — appears after the stub rise animation settles */}
       <AnimatePresence>

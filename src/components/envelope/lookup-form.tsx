@@ -398,7 +398,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
         className="text-center select-none space-y-1"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        transition={{ duration: 0.5, delay: 1.40 }}
       >
         <h3 className="font-display text-xl sm:text-2xl font-bold text-ink tracking-wide">
           Find Your Invitation
@@ -412,7 +412,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
         className="space-y-1.5"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        transition={{ duration: 0.5, delay: 1.55 }}
       >
         <Label htmlFor="fullName" className="text-[10px] font-bold uppercase tracking-wider text-muted-ink/80 block text-center">
           Full Name
@@ -445,7 +445,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
+        transition={{ duration: 0.5, delay: 1.70 }}
       >
         <Button
           type="submit"
