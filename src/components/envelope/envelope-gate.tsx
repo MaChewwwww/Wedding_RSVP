@@ -365,7 +365,6 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
           rotateX: isMobile ? 0 : (opened && !animating ? 0 : (reduceMotion ? 0 : rX)),
           rotateY: isMobile ? 0 : (opened && !animating ? 0 : (reduceMotion ? 0 : rY)),
           transformStyle: "preserve-3d",
-          perspective: 1000,
         }}
         className="relative w-full max-w-[460px] aspect-[500/350] preserve-3d select-none z-10"
       >
@@ -782,10 +781,11 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
               backfaceVisibility: "hidden",
               transform: "translateZ(0)",
               willChange: "transform, opacity",
+              WebkitMaskImage: "-webkit-radial-gradient(white, black)",
             }}
-            initial={{ opacity: 0, x: "-50%", y: "-40%", scale: 0.95 }}
-            animate={{ opacity: 1, x: "-50%", y: "-50%", scale: 1 }}
-            exit={{ opacity: 0, x: "-50%", y: "-44%", scale: 0.97, transition: { duration: 0.22, ease: "easeIn" } }}
+            initial={{ opacity: 0, x: "-50%", y: "-40%", scale: 0.95, z: 0 }}
+            animate={{ opacity: 1, x: "-50%", y: "-50%", scale: 1, z: 0 }}
+            exit={{ opacity: 0, x: "-50%", y: "-44%", scale: 0.97, z: 0, transition: { duration: 0.22, ease: "easeIn" } }}
             transition={{ type: "spring", stiffness: 80, damping: 18, mass: 0.9 }}
           >
             {/* Paper texture */}
@@ -806,8 +806,8 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
                   transform: "translateZ(0)",
                   willChange: "transform",
                 }}
-                initial={{ x: "-100%" }}
-                animate={{ x: "100%" }}
+                initial={{ x: "-100%", z: 0 }}
+                animate={{ x: "100%", z: 0 }}
                 transition={{ duration: 1.8, delay: 0.6, ease: "easeInOut" }}
               />
             </motion.div>
