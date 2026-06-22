@@ -774,6 +774,10 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
               background: "linear-gradient(to bottom, #fff0f2 0%, #fecdd3 100%)",
               boxShadow: "0 30px 60px rgba(15, 23, 42, 0.18), 0 1px 0 rgba(255, 255, 255, 0.4) inset",
               WebkitFontSmoothing: "subpixel-antialiased",
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
+              transform: "translateZ(0)",
+              willChange: "transform, opacity",
             }}
             initial={{ opacity: 0, x: "-50%", y: "-40%", scale: 0.95 }}
             animate={{ opacity: 1, x: "-50%", y: "-50%", scale: 1 }}
@@ -786,11 +790,17 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
             {/* Shimmer glint sweep */}
             <motion.div
               className="absolute inset-0 pointer-events-none z-10 rounded-lg overflow-hidden"
+              style={{
+                transform: "translateZ(0)",
+                WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+              }}
             >
               <motion.div
                 className="absolute inset-0"
                 style={{
                   background: "linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.45) 45%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.45) 55%, transparent 70%)",
+                  transform: "translateZ(0)",
+                  willChange: "transform",
                 }}
                 initial={{ x: "-100%" }}
                 animate={{ x: "100%" }}
