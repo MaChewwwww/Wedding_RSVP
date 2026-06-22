@@ -199,7 +199,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
         // Step 3: Wait for card to finish opening (1.5s), then finish animating
         setTimeout(() => {
           setAnimating(false);
-        }, 1500);
+        }, isMobile ? 50 : 1500);
       }, 800);
     }, 250);
   }, [animating, opened, triggerBurst]);
@@ -219,7 +219,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
       setTimeout(() => {
         setAnimating(false);
       }, 1200);
-    }, 1000);
+    }, isMobile ? 50 : 1000);
   }, [animating, opened]);
 
   return (
@@ -592,8 +592,9 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
 
         {/* 6. Paper Card Stub — visual shell only; drives the rise/sink animation.
              Content is rendered in the fixed overlay below so it is always screen-centered. */}
-        <motion.div
-          className="absolute left-0 right-0 rounded-xl border-4 border-rose-200 z-20"
+        {!isMobile && (
+          <motion.div
+            className="absolute left-0 right-0 rounded-xl border-4 border-rose-200 z-20"
           style={{
             top: "5%",
             minHeight: "80px",
@@ -622,6 +623,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
           {/* Double border */}
           <div className="absolute inset-2.5 border border-rose/15 rounded-lg pointer-events-none" />
         </motion.div>
+        )}
 
         {/* 7. Gold Monogram Wax Seal Trigger */}
         <AnimatePresence>
