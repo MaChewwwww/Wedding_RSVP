@@ -47,7 +47,7 @@ export function PassPanel({ label, qrDataUrl }: PassPanelProps) {
           download={downloadName}
           className={buttonVariants({ className: "mt-4 w-full" })}
         >
-          Download PNG
+          Download QR Pass
         </a>
       )}
     </div>
