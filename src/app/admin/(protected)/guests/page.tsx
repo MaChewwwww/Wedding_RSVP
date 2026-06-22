@@ -10,6 +10,29 @@ import {
   CreatePartyForm,
   ImportGuestsForm,
 } from "@/components/admin/guest-admin-forms";
+import { PageHeader } from "@/components/admin/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Select } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import {
+  AdminTable,
+  Table,
+  TableHead,
+  Th,
+  TableBody,
+  Tr,
+  Td,
+  TableEmpty,
+} from "@/components/admin/admin-table";
+import { Download, Search } from "lucide-react";
+
+function rsvpBadge(status: string) {
+  if (status === "attending") return <Badge variant="success">Attending</Badge>;
+  if (status === "declined") return <Badge variant="danger">Declined</Badge>;
+  return <Badge variant="muted">Pending</Badge>;
+}
 
 export default async function GuestsPage({
   searchParams,
@@ -21,127 +44,179 @@ export default async function GuestsPage({
   const parties = await loadGuestAdminData(search);
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-5 py-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold">Guests</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Manage one named guest per invitation, RSVP state, and passes.
-          </p>
-        </div>
-        <Link href="/admin/guests/export" className="text-sm font-medium underline">
-          Export CSV
+    <div className="mx-auto w-full max-w-7xl px-5 py-8">
+      <PageHeader
+        title="Guests"
+        subtitle="Manage invitations, RSVP states, and digital passes."
+      >
+        <Link href="/admin/guests/export">
+          <Button variant="outline" size="sm">
+            <Download className="h-3.5 w-3.5" />
+            Export CSV
+          </Button>
         </Link>
-      </div>
+      </PageHeader>
 
-      <form className="mt-6 flex max-w-md gap-2">
-        <input
-          name="q"
-          defaultValue={search}
-          placeholder="Search invited guests"
-          className="min-h-11 flex-1 rounded-md border border-zinc-300 bg-white px-3"
-        />
-        <button className="min-h-11 rounded-md bg-zinc-900 px-4 text-sm font-medium text-white">
+      {/* ── Search ── */}
+      <form className="mb-6 flex max-w-md gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60 pointer-events-none" aria-hidden />
+          <Input
+            name="q"
+            defaultValue={search}
+            placeholder="Search guests by name or email…"
+            className="pl-10"
+          />
+        </div>
+        <Button type="submit" variant="primary" size="default">
           Search
-        </button>
+        </Button>
       </form>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[1fr_24rem]">
+      <div className="grid gap-8 xl:grid-cols-[1fr_22rem]">
+
+        {/* ── Guest table ── */}
         <section>
-          <div className="overflow-x-auto border-y border-zinc-200">
-            <table className="w-full text-left text-sm">
-              <thead className="text-zinc-600">
+          <AdminTable>
+            <Table>
+              <TableHead>
                 <tr>
-                  <th className="py-3 pr-4">Guest</th>
-                  <th className="py-3 pr-4">RSVP</th>
-                  <th className="py-3 pr-4">Passes</th>
-                  <th className="py-3">Action</th>
+                  <Th>Guest / Email</Th>
+                  <Th>Party RSVP</Th>
+                  <Th>Passes</Th>
+                  <Th>Actions</Th>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200">
+              </TableHead>
+              <TableBody>
+                {parties.length === 0 && (
+                  <TableEmpty message="No guests found. Try a different search or create one →" />
+                )}
                 {parties.map((party) => (
-                  <tr key={party.id}>
-                    <td className="py-4 pr-4 align-top">
-                      <p className="text-xs text-zinc-500">{party.email || "No email"}</p>
-                      {(party.invitees ?? []).filter((guest) => guest.is_active).map((guest) => (
-                        <div key={guest.id} className="mb-3">
-                          <p>{guest.full_name}</p>
-                          <form
-                            action={adminRsvpOverrideAction}
-                            className="mt-1 flex flex-wrap gap-1"
-                          >
-                            <input type="hidden" name="inviteeId" value={guest.id} />
-                            <select
-                              name="status"
-                              defaultValue={guest.rsvp_status}
-                              className="min-h-9 rounded border border-zinc-300 bg-white px-2 text-xs"
-                            >
-                              <option value="pending">Pending</option>
-                              <option value="attending">Attending</option>
-                              <option value="declined">Declined</option>
-                            </select>
-                            <input
-                              name="reason"
-                              required
-                              minLength={3}
-                              placeholder="Override reason"
-                              className="min-h-9 w-32 rounded border border-zinc-300 px-2 text-xs"
-                            />
-                            <button className="min-h-9 rounded border border-zinc-300 px-2 text-xs">
-                              Save
-                            </button>
-                          </form>
-                        </div>
-                      ))}
-                    </td>
-                    <td className="py-4 pr-4 align-top">{party.rsvp_status}</td>
-                    <td className="py-4 pr-4 align-top">
-                      {(party.qr_passes ?? []).filter((pass) => pass.status === "active").map((pass) => (
-                        <form key={pass.id} action={revokePassAction}>
-                          <input type="hidden" name="passId" value={pass.id} />
-                          <button className="text-red-700 underline">Revoke active pass</button>
-                        </form>
-                      ))}
+                  <Tr key={party.id}>
+                    {/* Guest column */}
+                    <Td>
+                      <p className="text-xs text-muted-ink mb-1">{party.email || "No email"}</p>
                       {(party.invitees ?? [])
-                        .filter((guest) => guest.is_active && guest.rsvp_status === "attending")
+                        .filter((g) => g.is_active)
                         .map((guest) => (
-                          <form key={guest.id} action={reissuePassAction}>
-                            <input type="hidden" name="inviteeId" value={guest.id} />
-                            <button className="mt-1 text-zinc-700 underline">
-                              Reissue for {guest.full_name}
-                            </button>
-                          </form>
+                          <div key={guest.id} className="mb-3 last:mb-0">
+                            <p className="font-medium text-ink mb-1">{guest.full_name}</p>
+                            {/* RSVP override inline form */}
+                            <form
+                              action={adminRsvpOverrideAction}
+                              className="flex flex-wrap items-center gap-1.5"
+                            >
+                              <input type="hidden" name="inviteeId" value={guest.id} />
+                              <Select
+                                name="status"
+                                defaultValue={guest.rsvp_status}
+                                className="min-h-8 w-32 text-xs py-1.5 px-2"
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="attending">Attending</option>
+                                <option value="declined">Declined</option>
+                              </Select>
+                              <Input
+                                name="reason"
+                                required
+                                minLength={3}
+                                placeholder="Override reason"
+                                className="min-h-8 w-36 text-xs py-1.5"
+                              />
+                              <Button type="submit" size="sm" variant="outline">
+                                Save
+                              </Button>
+                            </form>
+                          </div>
                         ))}
-                    </td>
-                    <td className="py-4 align-top">
+                    </Td>
+
+                    {/* RSVP status */}
+                    <Td>{rsvpBadge(party.rsvp_status)}</Td>
+
+                    {/* Passes */}
+                    <Td>
+                      <div className="flex flex-col gap-1.5">
+                        {(party.qr_passes ?? [])
+                          .filter((p) => p.status === "active")
+                          .map((pass) => (
+                            <form key={pass.id} action={revokePassAction}>
+                              <input type="hidden" name="passId" value={pass.id} />
+                              <Button type="submit" size="sm" variant="danger">
+                                Revoke pass
+                              </Button>
+                            </form>
+                          ))}
+                        {(party.invitees ?? [])
+                          .filter((g) => g.is_active && g.rsvp_status === "attending")
+                          .map((guest) => (
+                            <form key={guest.id} action={reissuePassAction}>
+                              <input type="hidden" name="inviteeId" value={guest.id} />
+                              <Button type="submit" size="sm" variant="ghost">
+                                Reissue — {guest.full_name}
+                              </Button>
+                            </form>
+                          ))}
+                      </div>
+                    </Td>
+
+                    {/* Archive */}
+                    <Td>
                       {party.status === "active" && (
                         <form action={archivePartyAction}>
                           <input type="hidden" name="partyId" value={party.id} />
-                          <button className="text-red-700 underline">Archive</button>
+                          <Button type="submit" size="sm" variant="danger">
+                            Archive
+                          </Button>
                         </form>
                       )}
-                    </td>
-                  </tr>
+                      {party.status === "archived" && (
+                        <Badge variant="muted">Archived</Badge>
+                      )}
+                    </Td>
+                  </Tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </AdminTable>
         </section>
 
-        <aside className="space-y-8">
-          <section>
-            <h2 className="mb-4 text-lg font-semibold">Create invitation</h2>
+        {/* ── Sidebar forms ── */}
+        <aside className="space-y-6">
+          {/* Create invitation */}
+          <div
+            className="rounded-2xl p-6"
+            style={{
+              background: "rgba(253,232,240,0.35)",
+              border: "1px solid rgba(240,168,188,0.25)",
+            }}
+          >
+            <h2 className="font-display text-xl font-semibold text-ink mb-4">
+              Create invitation
+            </h2>
             <CreatePartyForm />
-          </section>
-          <section className="border-t border-zinc-200 pt-8">
-            <h2 className="mb-2 text-lg font-semibold">CSV import</h2>
-            <p className="mb-4 text-xs text-zinc-600">
-              Required column: full_name. Optional: email.
+          </div>
+
+          <Separator />
+
+          {/* CSV import */}
+          <div
+            className="rounded-2xl p-6"
+            style={{
+              background: "rgba(181,160,213,0.08)",
+              border: "1px solid rgba(181,160,213,0.2)",
+            }}
+          >
+            <h2 className="font-display text-xl font-semibold text-ink mb-1">
+              CSV Import
+            </h2>
+            <p className="mb-4 text-xs text-muted-ink">
+              Required column: <code className="font-mono text-rose">full_name</code>. Optional: <code className="font-mono text-rose">email</code>.
             </p>
             <ImportGuestsForm />
-          </section>
+          </div>
         </aside>
       </div>
-    </main>
+    </div>
   );
 }

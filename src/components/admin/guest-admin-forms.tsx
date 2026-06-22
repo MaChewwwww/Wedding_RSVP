@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
 const initial: AdminFormState = { status: "idle" };
 
@@ -17,16 +18,17 @@ export function CreatePartyForm() {
   const [state, action, pending] = useActionState(createPartyAction, initial);
   return (
     <form action={action} className="space-y-4">
-      <div>
+      <div className="space-y-1.5">
         <Label htmlFor="fullName">Guest full name</Label>
-        <Input id="fullName" name="fullName" required />
+        <Input id="fullName" name="fullName" required placeholder="e.g. Juan dela Cruz" />
       </div>
-
-      <div>
-        <Label htmlFor="email">Initial email (optional)</Label>
-        <Input id="email" name="email" type="email" />
+      <div className="space-y-1.5">
+        <Label htmlFor="email">
+          Email <span className="text-muted-ink">(optional)</span>
+        </Label>
+        <Input id="email" name="email" type="email" placeholder="guest@email.com" />
       </div>
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Creating…" : "Create guest invitation"}
       </Button>
       <FormMessage state={state} />
@@ -38,17 +40,18 @@ export function ImportGuestsForm() {
   const [state, action, pending] = useActionState(importGuestsAction, initial);
   return (
     <form action={action} className="space-y-4">
-      <div>
+      <div className="space-y-1.5">
         <Label htmlFor="csv">CSV data</Label>
         <Textarea
           id="csv"
           name="csv"
-          rows={8}
-          placeholder="full_name,email"
+          rows={7}
+          placeholder={"full_name,email\nJuan dela Cruz,juan@example.com"}
           required
+          className="font-mono text-xs"
         />
       </div>
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Importing…" : "Import CSV"}
       </Button>
       <FormMessage state={state} />
@@ -58,12 +61,24 @@ export function ImportGuestsForm() {
 
 function FormMessage({ state }: { state: AdminFormState }) {
   if (state.status === "idle") return null;
+  const isSuccess = state.status === "success";
   return (
-    <p
+    <div
       role="status"
-      className={state.status === "success" ? "text-sm text-emerald-700" : "text-sm text-red-700"}
+      className="flex items-start gap-2 rounded-xl px-3 py-2.5"
+      style={{
+        background: isSuccess ? "rgba(90,156,86,0.08)" : "rgba(176,48,80,0.08)",
+        border: isSuccess ? "1px solid rgba(90,156,86,0.25)" : "1px solid rgba(176,48,80,0.2)",
+      }}
     >
-      {state.message}
-    </p>
+      {isSuccess ? (
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sage-deep" aria-hidden />
+      ) : (
+        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden />
+      )}
+      <p className={`text-sm ${isSuccess ? "text-sage-deep" : "text-danger"}`}>
+        {state.message}
+      </p>
+    </div>
   );
 }
