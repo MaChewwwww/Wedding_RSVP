@@ -225,10 +225,9 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
   return (
     <EnvelopeContext.Provider value={{ opened, cardOpened, animating, closeEnvelope: close }}>
       <div
-      className="full-svh relative flex w-full flex-col items-center justify-center overflow-hidden px-4 preserve-3d"
+      className="full-svh relative flex w-full flex-col items-center justify-center overflow-hidden px-4"
       style={{
         perspective: 1000,
-        transformStyle: "preserve-3d",
       }}
     >
       {/* Zoomed background image to crop out white paper edges */}
@@ -480,6 +479,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
             height: "52%",
             transformStyle: "preserve-3d",
             zIndex: opened ? 15 : 35,
+            willChange: "transform",
           }}
           animate={{
             rotateX: opened ? -175 : 0,
@@ -519,6 +519,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
             width: "50%",
             transformStyle: "preserve-3d",
             zIndex: opened ? 10 : 30,
+            willChange: "transform",
           }}
           animate={{
             rotateY: opened ? -175 : 0,
@@ -545,6 +546,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
             width: "50%",
             transformStyle: "preserve-3d",
             zIndex: opened ? 10 : 30,
+            willChange: "transform",
           }}
           animate={{
             rotateY: opened ? 175 : 0,
@@ -571,6 +573,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
             height: "52%",
             transformStyle: "preserve-3d",
             zIndex: opened ? 10 : 32,
+            willChange: "transform",
           }}
           animate={{
             rotateX: opened ? 175 : 0,
@@ -602,6 +605,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
             pointerEvents: "none",
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
+            willChange: "transform, opacity",
           }}
           initial={{ opacity: 0, scale: 0.95, y: 0, rotate: -2.5, z: 2 }}
           animate={{
