@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wedding RSVP
+
+A modern, responsive Wedding RSVP application built with Next.js App Router, Tailwind CSS, and Supabase.
 
 ## Getting Started
 
-First, run the development server:
+1. **Install dependencies:**
+   Make sure you are using `pnpm` as your package manager.
+   ```bash
+   pnpm install
+   ```
+
+2. **Environment Variables:**
+   Copy `.env.example` to `.env` and fill out your Supabase connection strings, API keys, and admin credentials.
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Start the Development Server:**
+   ```bash
+   pnpm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Database Management
+
+This project uses Supabase for the database, authentication, and backend services.
+
+### Local Database Reset & Seed
+
+If you need to completely reset your local Supabase database, re-apply migrations, and seed it with test data (including the admin user configured in your `.env`), run:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm db:reset:local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+*Note: This command runs `supabase db reset --local` behind the scenes. Make sure you have initialized the Supabase CLI (`pnpm dlx supabase init`) before running this.*
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+If you only want to run the seed script (to add the admin user and test guests to an existing database without dropping all tables), run:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm run seed
+```
 
-## Learn More
+## Documentation
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For more detailed technical documentation, please refer to the `docs/` folder:
+- `docs/configuration.md` - Environment and site setup
+- `docs/features.md` - Core application features
+- `docs/security-and-privacy.md` - Security and authentication models
+- `docs/tech-stack.md` - Technology stack and tools
