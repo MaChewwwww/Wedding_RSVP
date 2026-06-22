@@ -25,10 +25,7 @@ const cursive = Great_Vibes({
 });
 
 export const metadata: Metadata = {
-  title: {
-    default: `${site.couple.displayName} Wedding`,
-    template: `%s · ${site.couple.displayName}`,
-  },
+  title: "Wedding RSVP | Jobert & April",
   description: `You're invited to celebrate the wedding of ${site.couple.displayName}.`,
   robots: { index: false, follow: false },
 };

@@ -53,13 +53,13 @@ export function EntourageSection() {
         </div>
       </div>
 
-      <div className="mt-12">
+      <div className="mt-12 px-4 sm:px-6">
         {/* Principal Sponsors */}
         {entourage.length > 0 && (
-          <div className="mb-16">
-            <div className="mb-6 text-center">
+          <div className="mb-20">
+            <div className="mb-8 text-center">
               <span
-                className="inline-block rounded-full px-6 py-2 font-display text-xl font-semibold shadow-sm"
+                className="inline-block rounded-full px-8 py-2 font-display text-2xl font-medium shadow-sm"
                 style={{
                   background: GROUP_COLORS[0].bg,
                   color: GROUP_COLORS[0].text,
@@ -70,34 +70,34 @@ export function EntourageSection() {
                 {entourage[0].title}
               </span>
             </div>
-            <ul className="mx-auto grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6">
+            <ul className="mx-auto grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-8">
               {entourage[0].members.map((m, i) => {
                 const grad = AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length];
                 return (
                   <li
                     key={`${entourage[0].title}-${i}`}
-                    className="flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                    className="flex flex-col items-center gap-2 rounded-3xl p-8 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                     style={{
                       background: "rgba(255,252,248,0.72)",
                       backdropFilter: "blur(12px)",
                       WebkitBackdropFilter: "blur(12px)",
                       border: "1px solid rgba(255,255,255,0.7)",
-                      boxShadow: "0 4px 16px rgba(80,60,80,0.06)",
+                      boxShadow: "0 8px 32px rgba(80,60,80,0.06)",
                     }}
                   >
                     <span
                       aria-hidden
-                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow-md"
+                      className="mb-3 flex h-20 w-20 shrink-0 items-center justify-center rounded-full text-xl font-bold text-white shadow-lg"
                       style={{
                         background: `linear-gradient(135deg, ${grad[0]}, ${grad[1]})`,
-                        boxShadow: `0 4px 12px ${grad[1]}50`,
+                        boxShadow: `0 8px 24px ${grad[1]}50`,
                       }}
                     >
                       {getInitials(m.name)}
                     </span>
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-ink">{m.name}</p>
-                      <p className="truncate text-sm text-muted-ink">{m.role}</p>
+                    <div className="min-w-0 w-full">
+                      <p className="truncate font-display text-2xl font-semibold text-ink">{m.name}</p>
+                      <p className="mt-1 truncate text-xs uppercase tracking-[0.2em] text-muted-ink/80">{m.role}</p>
                     </div>
                   </li>
                 );
@@ -107,13 +107,13 @@ export function EntourageSection() {
         )}
 
         {/* Bridesmaids & Groomsmen Side-by-Side */}
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 md:gap-8 lg:gap-16">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 md:grid-cols-2 md:gap-8 lg:gap-16">
           {/* Bridesmaids */}
           {entourage.length > 1 && (
             <div>
-              <div className="mb-6 text-center">
+              <div className="mb-8 text-center">
                 <span
-                  className="inline-block rounded-full px-5 py-1.5 font-display text-lg font-semibold shadow-sm"
+                  className="inline-block rounded-full px-6 py-2 font-display text-xl font-medium shadow-sm"
                   style={{
                     background: GROUP_COLORS[1].bg,
                     color: GROUP_COLORS[1].text,
@@ -124,33 +124,33 @@ export function EntourageSection() {
                   {entourage[1].title}
                 </span>
               </div>
-              <ul className="grid grid-cols-1 gap-4">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:grid-cols-1 lg:grid-cols-2">
                 {entourage[1].members.map((m, i) => {
                   const grad = AVATAR_GRADIENTS[(i + 3) % AVATAR_GRADIENTS.length];
                   return (
                     <li
                       key={`${entourage[1].title}-${i}`}
-                      className="flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                      className="flex flex-col items-center gap-2 rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                       style={{
                         background: "rgba(255,252,248,0.72)",
                         backdropFilter: "blur(12px)",
                         border: "1px solid rgba(255,255,255,0.7)",
-                        boxShadow: "0 4px 16px rgba(80,60,80,0.06)",
+                        boxShadow: "0 8px 32px rgba(80,60,80,0.06)",
                       }}
                     >
                       <span
                         aria-hidden
-                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow-md"
+                        className="mb-2 flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white shadow-lg"
                         style={{
                           background: `linear-gradient(135deg, ${grad[0]}, ${grad[1]})`,
-                          boxShadow: `0 4px 12px ${grad[1]}50`,
+                          boxShadow: `0 8px 24px ${grad[1]}50`,
                         }}
                       >
                         {getInitials(m.name)}
                       </span>
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold text-ink">{m.name}</p>
-                        <p className="truncate text-sm text-muted-ink">{m.role}</p>
+                      <div className="min-w-0 w-full">
+                        <p className="truncate font-display text-xl font-semibold text-ink">{m.name}</p>
+                        <p className="mt-1 truncate text-[10px] uppercase tracking-[0.2em] text-muted-ink/80">{m.role}</p>
                       </div>
                     </li>
                   );
@@ -162,9 +162,9 @@ export function EntourageSection() {
           {/* Groomsmen */}
           {entourage.length > 2 && (
             <div>
-              <div className="mb-6 text-center">
+              <div className="mb-8 text-center">
                 <span
-                  className="inline-block rounded-full px-5 py-1.5 font-display text-lg font-semibold shadow-sm"
+                  className="inline-block rounded-full px-6 py-2 font-display text-xl font-medium shadow-sm"
                   style={{
                     background: GROUP_COLORS[2].bg,
                     color: GROUP_COLORS[2].text,
@@ -175,33 +175,33 @@ export function EntourageSection() {
                   {entourage[2].title}
                 </span>
               </div>
-              <ul className="grid grid-cols-1 gap-4">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:grid-cols-1 lg:grid-cols-2">
                 {entourage[2].members.map((m, i) => {
                   const grad = AVATAR_GRADIENTS[(i + 6) % AVATAR_GRADIENTS.length];
                   return (
                     <li
                       key={`${entourage[2].title}-${i}`}
-                      className="flex flex-row-reverse items-center gap-4 rounded-2xl p-4 text-right transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                      className="flex flex-col items-center gap-2 rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                       style={{
                         background: "rgba(255,252,248,0.72)",
                         backdropFilter: "blur(12px)",
                         border: "1px solid rgba(255,255,255,0.7)",
-                        boxShadow: "0 4px 16px rgba(80,60,80,0.06)",
+                        boxShadow: "0 8px 32px rgba(80,60,80,0.06)",
                       }}
                     >
                       <span
                         aria-hidden
-                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow-md"
+                        className="mb-2 flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white shadow-lg"
                         style={{
                           background: `linear-gradient(135deg, ${grad[0]}, ${grad[1]})`,
-                          boxShadow: `0 4px 12px ${grad[1]}50`,
+                          boxShadow: `0 8px 24px ${grad[1]}50`,
                         }}
                       >
                         {getInitials(m.name)}
                       </span>
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold text-ink">{m.name}</p>
-                        <p className="truncate text-sm text-muted-ink">{m.role}</p>
+                      <div className="min-w-0 w-full">
+                        <p className="truncate font-display text-xl font-semibold text-ink">{m.name}</p>
+                        <p className="mt-1 truncate text-[10px] uppercase tracking-[0.2em] text-muted-ink/80">{m.role}</p>
                       </div>
                     </li>
                   );

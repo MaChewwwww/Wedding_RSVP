@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Section } from "./section";
 import { PassPanel } from "@/components/pass/pass-panel";
+import { site } from "@/config/site";
 
 /*
   Wedding pass section — glassmorphism card on bg3,
@@ -11,8 +12,10 @@ import { PassPanel } from "@/components/pass/pass-panel";
 */
 export function PassSection({
   passes,
+  weddingDate,
 }: {
   passes: { label: string; qrDataUrl: string | null }[];
+  weddingDate?: string;
 }) {
   return (
     <Section
@@ -80,9 +83,30 @@ export function PassSection({
               </Link>
             </div>
           ) : (
-            passes.map((p) => (
-              <PassPanel key={p.label} label={p.label} qrDataUrl={p.qrDataUrl} />
-            ))
+            <>
+              {passes.map((p) => (
+                <PassPanel key={p.label} label={p.label} qrDataUrl={p.qrDataUrl} />
+              ))}
+              {passes.length % 2 !== 0 && (
+                <div
+                  className="mx-auto flex w-full max-w-sm flex-col items-center justify-center rounded-lg bg-paper p-8 shadow-sm text-center border border-blush/20"
+                >
+                  <div className="mb-4 text-3xl animate-pulse">🌸</div>
+                  <h3 className="font-display text-2xl font-semibold text-ink mb-3">
+                    We Are Excited to See You!
+                  </h3>
+                  <p className="text-sm text-muted-ink leading-relaxed max-w-[280px]">
+                    Your presence is our greatest gift. We can't wait to share this beautiful day, laugh, and celebrate together!
+                  </p>
+                  <div className="mt-6 text-rose/80 text-sm tracking-[0.1em] font-medium">
+                    {weddingDate || site.event.weddingDate}
+                  </div>
+                  <div className="mt-1 text-muted-ink/60 text-[10px] tracking-[0.15em] uppercase font-semibold">
+                    ✦ {site.couple.displayName} ✦
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -4,7 +4,7 @@ import { site } from "@/config/site";
   Footer — romantic dusk gradient, large cursive couple names,
   decorative SVG floral divider, hashtag pill badge.
 */
-export function FooterSection() {
+export function FooterSection({ weddingDate }: { weddingDate?: string }) {
   return (
     <footer
       id="footer"
@@ -57,7 +57,7 @@ export function FooterSection() {
             boxShadow: "0 4px 14px rgba(212,81,110,0.10)",
           }}
         >
-          <span className="font-display text-lg font-medium text-ink">{site.event.weddingDate}</span>
+          <span className="font-display text-lg font-medium text-ink">{weddingDate || site.event.weddingDate}</span>
         </div>
 
         {/* Support contact */}

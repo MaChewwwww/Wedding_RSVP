@@ -39,79 +39,99 @@ export function GallerySection() {
       id="gallery"
       ariaLabel="Pre-wedding gallery"
       style={{
-        backgroundImage: "url(/assets/bg1.png)",
+        backgroundImage: "url(/assets/gallery_bg_new.png)",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundColor: "#e8f5e8",
       }}
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage-deep/70">
-            Memories
-          </p>
-          <h2 className="mt-1 font-cursive text-5xl leading-tight text-sage-deep sm:text-6xl">
-            Gallery
-          </h2>
+      {/* Title */}
+      <div className="flex flex-col items-center justify-center text-center">
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage-deep/70">
+          Memories
+        </p>
+        <h2 className="mt-1 font-cursive text-5xl leading-tight text-sage-deep sm:text-6xl">
+          Gallery
+        </h2>
+      </div>
+
+      {/* Carousel Section */}
+      <div className="relative mt-10">
+        {/* Carousel */}
+        <div 
+          className="overflow-hidden border-x-2 border-white/50 relative" 
+          ref={emblaRef}
+        >
+          <div className="flex gap-4 sm:gap-6 px-4">
+            {SLIDES.map((s) => (
+              <div
+                key={s.n}
+                className="min-w-0 flex-[0_0_85%] sm:flex-[0_0_60%] lg:flex-[0_0_45%] transition-all duration-500 ease-out py-4"
+                style={{ 
+                  opacity: selected === s.n - 1 ? 1 : 0.5, 
+                  transform: selected === s.n - 1 ? "scale(1)" : "scale(0.92)" 
+                }}
+              >
+                {/* Frame wrapper */}
+                <div
+                  className="rounded-xl shadow-xl mx-auto transition-all duration-500"
+                  style={{
+                    background: "#fffdf9",
+                    padding: "14px",
+                    boxShadow: selected === s.n - 1 
+                      ? "0 20px 40px -8px rgba(0,0,0,0.2), 0 8px 16px -4px rgba(0,0,0,0.1)" 
+                      : "0 10px 20px -5px rgba(0,0,0,0.1)",
+                    border: "1px solid rgba(0,0,0,0.04)"
+                  }}
+                >
+                  <div
+                    className="flex aspect-[4/3] items-center justify-center rounded-lg overflow-hidden relative"
+                    style={{
+                      background: `linear-gradient(135deg, ${s.from}, ${s.to})`,
+                      boxShadow: "inset 0 2px 10px rgba(0,0,0,0.05)"
+                    }}
+                  >
+                    <div className="text-center">
+                      <div className="text-3xl mb-2 opacity-40">🌸</div>
+                      <p className="text-sm font-medium text-ink/50">Gallery Photo {s.n}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Arrow buttons */}
-        <div className="flex gap-2">
+        {/* Arrow buttons - absolutely positioned alongside the cards */}
+        <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between pointer-events-none px-1 sm:px-4">
           <button
             type="button"
             aria-label="Previous image"
             onClick={scrollPrev}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full transition-all hover:scale-105"
+            className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-105"
             style={{
-              background: "rgba(255,255,255,0.65)",
+              background: "rgba(255, 255, 255, 0.95)",
               backdropFilter: "blur(12px)",
               border: "1px solid rgba(143,188,139,0.35)",
-              boxShadow: "0 4px 12px rgba(90,156,86,0.12)",
+              boxShadow: "0 4px 16px rgba(90,156,86,0.2)",
             }}
           >
-            <ChevronLeft className="h-5 w-5 text-sage-deep" aria-hidden />
+            <ChevronLeft className="h-6 w-6 text-sage-deep ml-[-2px]" aria-hidden />
           </button>
           <button
             type="button"
             aria-label="Next image"
             onClick={scrollNext}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full transition-all hover:scale-105"
+            className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-105"
             style={{
-              background: "rgba(255,255,255,0.65)",
+              background: "rgba(255, 255, 255, 0.95)",
               backdropFilter: "blur(12px)",
               border: "1px solid rgba(143,188,139,0.35)",
-              boxShadow: "0 4px 12px rgba(90,156,86,0.12)",
+              boxShadow: "0 4px 16px rgba(90,156,86,0.2)",
             }}
           >
-            <ChevronRight className="h-5 w-5 text-sage-deep" aria-hidden />
+            <ChevronRight className="h-6 w-6 text-sage-deep mr-[-2px]" aria-hidden />
           </button>
-        </div>
-      </div>
-
-      {/* Carousel */}
-      <div className="mt-8 overflow-hidden" ref={emblaRef}>
-        <div className="flex gap-5">
-          {SLIDES.map((s) => (
-            <div
-              key={s.n}
-              className="min-w-0 flex-[0_0_82%] sm:flex-[0_0_58%] lg:flex-[0_0_42%] transition-all duration-300"
-              style={{ opacity: selected === s.n - 1 ? 1 : 0.65, transform: selected === s.n - 1 ? "scale(1)" : "scale(0.97)" }}
-            >
-              <div
-                className="flex aspect-[4/3] items-center justify-center rounded-2xl shadow-lg"
-                style={{
-                  background: `linear-gradient(135deg, ${s.from}, ${s.to})`,
-                  boxShadow: "0 12px 40px rgba(80,60,60,0.12), 0 2px 8px rgba(80,60,60,0.08)",
-                  border: "1px solid rgba(255,255,255,0.6)",
-                }}
-              >
-                <div className="text-center">
-                  <div className="text-3xl mb-2 opacity-40">🌸</div>
-                  <p className="text-sm font-medium text-ink/50">Gallery Photo {s.n}</p>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 

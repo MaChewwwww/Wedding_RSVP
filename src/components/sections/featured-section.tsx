@@ -31,7 +31,7 @@ export function FeaturedSection() {
           alt="Jobert and April in a romantic watercolor garden"
           fill
           priority
-          className="object-cover object-left sm:scale-[1.25] sm:origin-left"
+          className="object-contain object-bottom scale-[1.35] origin-bottom-left lg:object-cover lg:object-right lg:scale-[1.28] lg:origin-left transition-transform duration-500 ease-out"
           sizes="100vw"
         />
         {/* Gradient overlay for text legibility and pastel mood */}
@@ -49,25 +49,31 @@ export function FeaturedSection() {
       {/* Content */}
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-8 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-2">
         {/* Left — copy */}
-        <div className="flex flex-col gap-5">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-blush-deep/80">
-            Pre-Wedding
-          </p>
-          <h2 className="font-cursive text-6xl leading-tight text-rose sm:text-7xl"
-            style={{ textShadow: "0 2px 16px rgba(212,81,110,0.12)" }}>
-            Jobert &amp; April
-          </h2>
-          <div className="flex items-center gap-3">
-            <div className="h-px w-16"
-              style={{ background: "linear-gradient(to right, rgba(212,81,110,0.5), transparent)" }} />
-            <span className="text-rose/60">✦</span>
+        <div className="flex flex-col gap-6">
+          <div
+            className="rounded-2xl p-6 sm:p-8 max-w-md flex flex-col gap-3"
+            style={{
+              background: "rgba(255, 250, 246, 0.78)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              border: "1px solid rgba(255, 255, 255, 0.65)",
+              boxShadow: "0 12px 32px rgba(160, 80, 100, 0.04), 0 1px 0 rgba(255,255,255,0.9) inset",
+            }}
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-blush-deep/80">
+              Pre-Wedding
+            </p>
+            <h2 className="font-cursive text-6xl leading-none text-rose sm:text-7xl"
+              style={{ textShadow: "0 2px 16px rgba(212,81,110,0.12)" }}>
+              Jobert &amp; April
+            </h2>
+            <p className="text-sm sm:text-base leading-relaxed text-ink/75">
+              A few of our favorite moments leading up to the big day — a glimpse into our love story.
+            </p>
           </div>
-          <p className="max-w-sm text-base leading-relaxed text-ink/75">
-            A few of our favorite moments leading up to the big day — a glimpse into our love story.
-          </p>
 
           {/* Polaroid photo grid */}
-          <div className="relative mt-12 flex flex-col items-start sm:mt-12 sm:grid sm:grid-cols-3 sm:gap-4 sm:scale-[1.30] sm:origin-left">
+          <div className="relative mt-12 flex flex-col items-start sm:mt-12 sm:grid sm:grid-cols-3 sm:gap-4 sm:max-w-md sm:scale-[1.45] sm:origin-top-left">
             {Array.from({ length: PHOTO_COUNT }).map((_, i) => (
               <div
                 key={i}

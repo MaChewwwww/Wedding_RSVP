@@ -34,6 +34,7 @@ export const venues: Venue[] = [
     description:
       "Where the couple and entourage prepare before the ceremony. Details to follow.",
     googleMapsUrl: "https://maps.google.com/",
+    image: "/assets/prep_venue.png",
     isPlaceholder: true,
   },
   {
@@ -46,7 +47,7 @@ export const venues: Venue[] = [
     description:
       "The ceremony where Jobert and April exchange their vows. Details to follow.",
     googleMapsUrl: "https://maps.google.com/",
-    image: "/assets/bg6.png",
+    image: "/assets/wed_venue.png",
     isPlaceholder: true,
   },
   {
@@ -59,6 +60,7 @@ export const venues: Venue[] = [
     description:
       "Dinner, dancing, and celebration to follow the ceremony. Details to follow.",
     googleMapsUrl: "https://maps.google.com/",
+    image: "/assets/rec_venue.png",
     isPlaceholder: true,
   },
 ];

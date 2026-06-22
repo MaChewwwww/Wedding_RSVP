@@ -7,7 +7,7 @@ import { RsvpForm } from "@/components/rsvp/rsvp-form";
 import { BackendNotice } from "@/components/backend-notice";
 import { site } from "@/config/site";
 
-export const metadata: Metadata = { title: "RSVP" };
+
 export const dynamic = "force-dynamic";
 
 /*

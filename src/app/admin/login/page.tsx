@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LoginForm } from "./login-form";
 import { site } from "@/config/site";
 
-export const metadata: Metadata = { title: "Admin Sign In" };
+
 
 export default function AdminLoginPage() {
   return (

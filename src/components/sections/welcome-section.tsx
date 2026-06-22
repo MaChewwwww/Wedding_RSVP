@@ -9,7 +9,7 @@ import { site } from "@/config/site";
   Welcome section — full-bleed bg2 artwork with improved scrim, animated
   heading, personalized guest name badge, and scroll-down cue.
 */
-export function WelcomeSection({ displayName }: { displayName?: string }) {
+export function WelcomeSection({ displayName, weddingDate }: { displayName?: string, weddingDate?: string }) {
   return (
     <section
       id="welcome"
@@ -100,7 +100,7 @@ export function WelcomeSection({ displayName }: { displayName?: string }) {
           }}
         >
           <span className="font-display text-lg font-medium text-ink">
-            {site.event.weddingDate}
+            {weddingDate || site.event.weddingDate}
           </span>
         </motion.div>
 

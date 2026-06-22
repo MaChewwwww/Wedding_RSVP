@@ -6,7 +6,7 @@ import { PassPanel } from "@/components/pass/pass-panel";
 import { BackendNotice } from "@/components/backend-notice";
 import { ResendPassForm } from "@/components/pass/resend-pass-form";
 
-export const metadata: Metadata = { title: "Your Pass" };
+
 export const dynamic = "force-dynamic";
 
 /*

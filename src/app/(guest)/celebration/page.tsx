@@ -14,10 +14,10 @@ import { FooterSection } from "@/components/sections/footer-section";
 import { SectionDivider } from "@/components/sections/section-divider";
 import { CelebrationLayout } from "@/components/sections/celebration-layout";
 import { loadCurrentParty } from "@/server/rsvp/loader";
-import { isBackendConfigured } from "@/config/env";
+import { isBackendConfigured, serverEnv } from "@/config/env";
 import { loadPasses } from "@/server/qr/pass-loader";
 
-export const metadata: Metadata = { title: "Celebration" };
+
 export const dynamic = "force-dynamic";
 
 /*
@@ -27,6 +27,7 @@ export const dynamic = "force-dynamic";
 */
 export default async function CelebrationPage() {
   const configured = isBackendConfigured();
+  const envConfig = configured ? serverEnv() : null;
   const [party, passData] = configured
     ? await Promise.all([loadCurrentParty(), loadPasses()])
     : [null, null];
@@ -41,12 +42,13 @@ export default async function CelebrationPage() {
               ? party.guest.fullName
               : undefined
           }
+          weddingDate={configured ? envConfig?.WEDDING_DATE : undefined}
         />
 
         <SectionDivider />
 
         {/* ── Pass (bg3 watercolor tile) ─────────────────────────────── */}
-        <PassSection passes={passData?.passes ?? []} />
+        <PassSection passes={passData?.passes ?? []} weddingDate={configured ? envConfig?.WEDDING_DATE : undefined} />
 
         <SectionDivider />
 
@@ -66,7 +68,7 @@ export default async function CelebrationPage() {
         <SectionDivider />
 
         {/* ── Places & Venues (bg5 outdoor) ─────────────────────────── */}
-        <PlacesSection />
+        <PlacesSection weddingDate={configured ? envConfig?.WEDDING_DATE : undefined} />
 
         <SectionDivider />
 
@@ -91,7 +93,7 @@ export default async function CelebrationPage() {
         <SectionDivider />
 
         {/* ── Footer (romantic dusk gradient) ───────────────────────── */}
-        <FooterSection />
+        <FooterSection weddingDate={configured ? envConfig?.WEDDING_DATE : undefined} />
       </main>
     </CelebrationLayout>
   );

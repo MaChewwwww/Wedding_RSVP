@@ -58,6 +58,83 @@ export async function queuePassEmail(
     .single();
   const partyName = party?.display_name ?? "Guest";
 
+  // Fetch QR passes for the party
+  const { data: qrPasses } = await db
+    .from("qr_passes")
+    .select("invitee_id, token_ciphertext, invitees(full_name)")
+    .eq("party_id", args.partyId)
+    .eq("status", "active");
+
+  const { decryptQrToken } = await import("../qr/encryption");
+  const { buildPassUrl } = await import("../qr/token");
+  const { renderQrDataUrl } = await import("../qr/pass-loader");
+
+  const passesData = await Promise.all(
+    (qrPasses ?? []).map(async (r) => {
+      const invitee = Array.isArray(r.invitees) ? r.invitees[0] : r.invitees;
+      let qrDataUrl = "";
+      if (r.token_ciphertext) {
+        const rawToken = decryptQrToken(r.token_ciphertext);
+        qrDataUrl = await renderQrDataUrl(buildPassUrl(rawToken));
+      }
+      return {
+        id: r.invitee_id as string,
+        label: invitee?.full_name ?? "Guest",
+        qrDataUrl,
+      };
+    })
+  );
+
+  // Upload QR PNGs to Supabase Storage and get public URLs for the email.
+  // This is necessary because Gmail blocks CID and data-URI images in emails,
+  // and local API routes are unreachable by external mail clients during dev.
+  const BUCKET = "qr-code";
+
+  // Ensure the bucket exists (idempotent — won't fail if already created).
+  const { error: bucketErr } = await db.storage.createBucket(BUCKET, {
+    public: true,
+    allowedMimeTypes: ["image/png"],
+  });
+  // Ignore "already exists" error (code 23505 or message contains "already exists")
+  if (bucketErr && !bucketErr.message?.toLowerCase().includes("already exists")) {
+    logger.error("qr_bucket_create_failed", { error: bucketErr.message });
+  }
+
+  const passesWithUrls = await Promise.all(
+    passesData.map(async (p) => {
+      if (!p.qrDataUrl) return { ...p, publicUrl: "" };
+      const base64Data = p.qrDataUrl.replace(/^data:image\/png;base64,/, "");
+      const pngBuffer = Buffer.from(base64Data, "base64");
+      const storagePath = `${args.partyId}/${p.id}.png`;
+
+      // Upsert so re-sends overwrite cleanly.
+      await db.storage
+        .from(BUCKET)
+        .upload(storagePath, pngBuffer, {
+          contentType: "image/png",
+          upsert: true,
+        });
+
+      const { data: urlData } = db.storage
+        .from(BUCKET)
+        .getPublicUrl(storagePath);
+
+      return { ...p, publicUrl: urlData?.publicUrl ?? "" };
+    })
+  );
+
+  // Still attach as fallback download (works regardless of email client).
+  const attachments = passesData
+    .filter((p) => p.qrDataUrl)
+    .map((p) => {
+      const base64Data = p.qrDataUrl.replace(/^data:image\/png;base64,/, "");
+      return {
+        filename: `wedding-pass-${p.label.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.png`,
+        content: Buffer.from(base64Data, "base64"),
+        content_type: "image/png",
+      };
+    });
+
   const key = idempotencyKey(args.partyId, args.purpose);
 
   // Record (or reuse) a delivery row keyed by idempotency key.
@@ -87,7 +164,8 @@ export async function queuePassEmail(
       from,
       to: args.email,
       subject: "Your wedding pass",
-      react: PassEmail({ partyName, passUrl }),
+      react: PassEmail({ partyName, passUrl, passes: passesWithUrls }),
+      attachments: attachments.length > 0 ? attachments : undefined,
     });
     if (error) throw new Error(error.message);
 

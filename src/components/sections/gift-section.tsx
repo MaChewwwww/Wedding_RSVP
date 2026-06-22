@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, Copy, Gift } from "lucide-react";
+import { Check, Copy, Gift, QrCode } from "lucide-react";
 import { Section } from "./section";
 import { site } from "@/config/site";
 
@@ -14,8 +14,8 @@ import { site } from "@/config/site";
 type GiftAccount = { provider: string; accountName: string; identifier: string };
 
 const ACCOUNTS: GiftAccount[] = [
-  { provider: "Bank Transfer", accountName: "To be confirmed", identifier: "—" },
-  { provider: "E-Wallet", accountName: "To be confirmed", identifier: "—" },
+  { provider: "Bank Transfer", accountName: "Jobert & April", identifier: "0012 3456 7890" },
+  { provider: "GCash / E-Wallet", accountName: "April Joy", identifier: "0912 345 6789" },
 ];
 
 const CARD_STYLES = [
@@ -62,7 +62,7 @@ export function GiftSection() {
         </p>
       </div>
 
-      <div className="mx-auto mt-10 grid max-w-2xl gap-5 sm:grid-cols-2">
+      <div className="mx-auto mt-10 grid max-w-2xl gap-8 sm:grid-cols-2">
         {ACCOUNTS.map((a, i) => (
           <GiftCard key={a.provider} account={a} style={CARD_STYLES[i % CARD_STYLES.length]} />
         ))}
@@ -90,7 +90,7 @@ function GiftCard({
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl p-6"
+      className="relative flex flex-col items-center overflow-hidden rounded-3xl p-8 text-center"
       style={{
         background: `linear-gradient(145deg, ${style.from}, ${style.to})`,
         border: `1px solid ${style.accent}25`,
@@ -108,27 +108,36 @@ function GiftCard({
         }}
       />
 
-      {/* Icon */}
+      {/* Header */}
       <div
-        className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl"
+        className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl"
         style={{ background: style.iconBg, boxShadow: `0 4px 14px ${style.accent}40` }}
       >
         <Gift className="h-5 w-5 text-white" aria-hidden />
       </div>
-
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: style.accent }}>
+      <p className="mb-6 text-xs font-bold uppercase tracking-[0.2em]" style={{ color: style.accent }}>
         {account.provider}
       </p>
-      <p className="mt-1.5 font-display text-xl font-semibold text-ink">{account.accountName}</p>
 
-      <div className="mt-3 flex items-center justify-between gap-2 rounded-xl px-3 py-2"
-        style={{ background: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.7)" }}>
-        <code className="truncate text-sm text-muted-ink flex-1">{account.identifier}</code>
+      {/* QR Code Placeholder */}
+      <div 
+        className="mb-6 flex h-36 w-36 items-center justify-center rounded-2xl bg-white/50 shadow-inner"
+        style={{ border: `2px dashed ${style.accent}40` }}
+      >
+        <QrCode className="h-12 w-12" style={{ color: `${style.accent}60` }} />
+      </div>
+
+      {/* Account Info */}
+      <p className="font-display text-2xl font-semibold text-ink">{account.accountName}</p>
+
+      <div className="mt-4 flex w-full items-center justify-between gap-2 rounded-xl px-4 py-2.5"
+        style={{ background: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.8)" }}>
+        <code className="truncate text-base font-medium tracking-wide text-muted-ink flex-1 text-left">{account.identifier}</code>
         <button
           type="button"
           onClick={copy}
           aria-label={`Copy ${account.provider} details`}
-          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-all hover:scale-105"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-all hover:scale-105"
           style={{
             background: `linear-gradient(135deg, ${style.accent}, ${style.accent}bb)`,
             boxShadow: `0 2px 8px ${style.accent}40`,
