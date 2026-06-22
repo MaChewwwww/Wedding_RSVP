@@ -224,13 +224,15 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
 
   return (
     <EnvelopeContext.Provider value={{ opened, cardOpened, animating, closeEnvelope: close }}>
-      <div
-      className="full-svh relative flex w-full flex-col items-center justify-center overflow-hidden px-4 preserve-3d"
-      style={{
-        perspective: 1000,
-        transformStyle: "preserve-3d",
-      }}
-    >
+      <div className="full-svh relative flex w-full flex-col items-center justify-center overflow-hidden px-4">
+        {/* 3D Scene Wrapper - Keeps 3D transforms isolated so position: fixed overlays work correctly on iOS Safari! */}
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0"
+          style={{
+            perspective: 1000,
+            transformStyle: "preserve-3d",
+          }}
+        >
       {/* Zoomed background image to crop out white paper edges */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -368,7 +370,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
           transformStyle: "preserve-3d",
           perspective: 1000,
         }}
-        className="relative w-full max-w-[460px] aspect-[500/350] preserve-3d select-none z-10"
+        className="relative w-full max-w-[460px] aspect-[500/350] preserve-3d select-none z-10 pointer-events-auto"
       >
         {/* 0. Soft champagne glow directly behind the envelope */}
         <motion.div
@@ -761,6 +763,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
           )}
         </AnimatePresence>
       </motion.div>
+      </div> {/* End 3D Scene Wrapper */}
 
       {/* Fixed screen-centered card overlay — appears after the stub rise animation settles */}
       <AnimatePresence>
