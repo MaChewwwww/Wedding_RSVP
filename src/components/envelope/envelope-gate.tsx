@@ -138,7 +138,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
   const rY = useSpring(rotateY, springConfig);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (reduceMotion) return;
+    if (reduceMotion || isMobile) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
@@ -149,6 +149,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
   };
 
   const handleMouseLeave = () => {
+    if (isMobile) return;
     x.set(0);
     y.set(0);
   };
@@ -157,7 +158,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
   const triggerBurst = React.useCallback(() => {
     const petalColors = ["#d45d79", "#ea728c", "#c73e5d", "#e05275", "#a22041", "#e57c97"];
     const sparkleColors = ["#ffd700", "#fffbbf", "#ffffff"];
-    const newParticles = Array.from({ length: 65 }).map((_, i) => {
+    const newParticles = Array.from({ length: isMobile ? 25 : 65 }).map((_, i) => {
       const angle = Math.random() * Math.PI * 2;
       const distance = 80 + Math.random() * 260;
       const targetX = Math.cos(angle) * distance;
@@ -180,7 +181,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
       };
     });
     setParticles(newParticles);
-  }, []);
+  }, [isMobile]);
 
   const open = React.useCallback(() => {
     if (animating || opened) return;
@@ -310,7 +311,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
       <AnimatePresence>
         {opened && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden z-[2]">
-            {WIND_PETALS.map((wp) => (
+            {(isMobile ? WIND_PETALS.slice(0, 10) : WIND_PETALS).map((wp) => (
               <motion.div
                 key={wp.id}
                 className="absolute"
@@ -342,7 +343,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       {/* Floating petals background (continuous) */}
-      {!reduceMotion && PETALS.map((p) => (
+      {!reduceMotion && (isMobile ? PETALS.slice(0, 5) : PETALS).map((p) => (
         <div
           key={p.id}
           aria-hidden
@@ -362,8 +363,8 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{
-          rotateX: opened && !animating ? 0 : (reduceMotion ? 0 : rX),
-          rotateY: opened && !animating ? 0 : (reduceMotion ? 0 : rY),
+          rotateX: isMobile ? 0 : (opened && !animating ? 0 : (reduceMotion ? 0 : rX)),
+          rotateY: isMobile ? 0 : (opened && !animating ? 0 : (reduceMotion ? 0 : rY)),
           transformStyle: "preserve-3d",
           perspective: 1000,
         }}
