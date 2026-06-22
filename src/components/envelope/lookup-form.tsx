@@ -183,7 +183,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
             onClick={() => router.push("/celebration")}
             className="w-full h-12 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-950/20 hover:shadow-lg hover:shadow-rose-950/30 font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200"
           >
-            Continue to Celebration
+            Continue to Wedding Details
           </Button>
         </motion.div>
       </div>
