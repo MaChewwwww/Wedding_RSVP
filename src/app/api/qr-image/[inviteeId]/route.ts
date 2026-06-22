@@ -51,7 +51,7 @@ export async function GET(
     type: "png",
   });
 
-  return new NextResponse(pngBuffer, {
+  return new NextResponse(pngBuffer as any, {
     status: 200,
     headers: {
       "Content-Type": "image/png",
