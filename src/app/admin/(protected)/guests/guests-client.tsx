@@ -11,6 +11,7 @@ import {
   TicketX,
   Mail,
   Users,
+  Edit,
 } from "lucide-react";
 import {
   adminRsvpOverrideAction,
@@ -76,24 +77,9 @@ function GuestRow({ party }: { party: Party }) {
   const activePass = (party.qr_passes ?? []).find((p) => p.status === "active");
   const { pending, run } = useAdminAction();
   const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [updateOpen, setUpdateOpen] = React.useState(false);
 
   if (!guest) return null;
-
-  function changeStatus(status: string) {
-    if (status === guest!.rsvp_status) return;
-    const label =
-      STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;
-    run(
-      () => {
-        const fd = new FormData();
-        fd.set("inviteeId", guest!.id);
-        fd.set("status", status);
-        fd.set("reason", "Manual status update by admin");
-        return adminRsvpOverrideAction(fd);
-      },
-      { loading: "Updating status…", success: `Marked ${label}` },
-    );
-  }
 
   function pass(action: () => Promise<void>, kind: "revoke" | "issue") {
     run(action, {
@@ -124,21 +110,6 @@ function GuestRow({ party }: { party: Party }) {
       </Td>
       <Td>
         <StatusPill status={guest.rsvp_status} />
-      </Td>
-      <Td>
-        <Select
-          value={guest.rsvp_status}
-          disabled={pending}
-          aria-label={`Set status for ${guest.full_name}`}
-          onChange={(e) => changeStatus(e.target.value)}
-          className="min-h-9 w-40 py-1.5 text-xs"
-        >
-          {STATUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </Select>
       </Td>
       <Td>
         {activePass ? (
@@ -181,6 +152,17 @@ function GuestRow({ party }: { party: Party }) {
       </Td>
       <Td className="text-right">
         <Button
+          onClick={() => setUpdateOpen(true)}
+          disabled={pending}
+          size="icon"
+          variant="ghost"
+          title="Update status"
+          aria-label="Update status"
+          className="mr-1 h-9 w-9 text-muted-ink hover:bg-[rgba(0,0,0,0.08)]"
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button
           onClick={() => setConfirmDelete(true)}
           disabled={pending}
           size="icon"
@@ -210,6 +192,64 @@ function GuestRow({ party }: { party: Party }) {
           </>
         }
       />
+
+      <Modal
+        open={updateOpen}
+        onClose={() => setUpdateOpen(false)}
+        title="Update Status"
+        description={`Manually update RSVP status for ${guest.full_name}.`}
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            fd.set("inviteeId", guest.id);
+            fd.set("reason", "Manual status update by admin");
+            const newStatus = fd.get("status") as string;
+            const label = STATUS_OPTIONS.find((o) => o.value === newStatus)?.label ?? newStatus;
+            run(() => adminRsvpOverrideAction(fd), {
+              loading: "Updating status…",
+              success: `Marked ${label}`,
+              onSuccess: () => setUpdateOpen(false),
+            });
+          }}
+          className="space-y-4"
+        >
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-ink">Status</label>
+            <Select name="status" defaultValue={guest.rsvp_status} className="w-full">
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="sendEmail"
+              name="sendEmail"
+              value="true"
+              defaultChecked={true}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <label htmlFor="sendEmail" className="text-sm text-ink">
+              Send QR Code Email (if attending)
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button type="button" variant="ghost" onClick={() => setUpdateOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" disabled={pending}>
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </Tr>
   );
 }
@@ -283,7 +323,6 @@ export function GuestsClient({
             <tr>
               <Th>Guest</Th>
               <Th>Status</Th>
-              <Th>Set Status</Th>
               <Th>Pass</Th>
               <Th className="text-right">Actions</Th>
             </tr>

@@ -10,33 +10,42 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
+import { useAdminAction } from "@/components/admin/use-admin-action";
 import { Camera, CameraOff, ScanLine, CheckCircle2, AlertCircle, ImageUp } from "lucide-react";
 
 const initial: ScannerState = { status: "idle" };
 
-function ConfirmCheckInButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button
-      type="submit"
-      variant="secondary"
-      size="default"
-      disabled={pending}
-      className="w-full"
-    >
-      <CheckCircle2 className="h-4 w-4" />
-      {pending ? "Checking in…" : "Confirm check-in"}
-    </Button>
-  );
-}
+// Removed ConfirmCheckInButton as we will use useAdminAction inline
 
 export function QrScanner() {
   const [state, action, pending] = useActionState(resolveScanAction, initial);
   const [running, setRunning] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
+  const [successSubject, setSuccessSubject] = useState<{ fullName: string; tableName: string | null } | null>(null);
+  const { pending: checkInPending, run: runCheckIn } = useAdminAction();
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<{ stop: () => void } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  function onConfirmCheckIn(inviteeId: string, fullName: string, tableName: string | null) {
+    runCheckIn(
+      () => {
+        const fd = new FormData();
+        fd.set("inviteeId", inviteeId);
+        fd.set("method", "qr");
+        return checkInAction(fd);
+      },
+      {
+        loading: "Checking in…",
+        success: "Guest checked in",
+        onSuccess: () => {
+          setSuccessSubject({ fullName, tableName });
+        },
+      }
+    );
+  }
 
   async function decodeFromFile(file: File) {
     setScannerError(null);
@@ -251,14 +260,56 @@ export function QrScanner() {
             </Badge>
           </div>
           {!state.subject.isCheckedIn && (
-            <form action={checkInAction} className="mt-4">
-              <input type="hidden" name="inviteeId" value={state.subject.inviteeId} />
-              <input type="hidden" name="method" value="qr" />
-              <ConfirmCheckInButton />
-            </form>
+            <div className="mt-4">
+              <Button
+                variant="secondary"
+                size="default"
+                disabled={checkInPending}
+                className="w-full"
+                onClick={() => onConfirmCheckIn(state.subject.inviteeId, state.subject.fullName, state.subject.tableName)}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {checkInPending ? "Checking in…" : "Confirm check-in"}
+              </Button>
+            </div>
           )}
         </div>
       )}
+
+      {/* Success Modal */}
+      <Modal
+        open={successSubject !== null}
+        onClose={() => setSuccessSubject(null)}
+        title="Check-in Successful"
+        description="Guest has been checked in."
+      >
+        {successSubject && (
+          <div className="flex flex-col items-center py-4 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sage-light">
+              <CheckCircle2 className="h-8 w-8 text-sage-deep" />
+            </div>
+            <p className="text-2xl font-display font-semibold text-ink">
+              {successSubject.fullName}
+            </p>
+            <div className="mt-4 w-full rounded-xl border border-sage-light bg-[rgba(90,156,86,0.05)] px-6 py-4">
+              <p className="text-sm font-medium text-muted-ink">Table Assignment</p>
+              <p className="mt-1 text-4xl font-bold text-sage-deep">
+                {successSubject.tableName ?? "No Table"}
+              </p>
+            </div>
+            <Button
+              className="mt-6 w-full"
+              variant="primary"
+              onClick={() => {
+                setSuccessSubject(null);
+                // To reset scanner, we can just let them scan again
+              }}
+            >
+              Done / Scan Next Guest
+            </Button>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -8,6 +8,9 @@ import { normalizeName } from "@/server/matching/normalize";
 import { parseSimpleCsv } from "@/server/admin/csv";
 import { generateRawToken, hashToken } from "@/server/qr/token";
 import { encryptQrToken } from "@/server/qr/encryption";
+import { randomUUID } from "node:crypto";
+import { queuePassEmail } from "@/server/email/send";
+import { logger } from "@/lib/logger";
 
 export type AdminFormState = {
   status: "idle" | "success" | "error";
@@ -252,11 +255,13 @@ export async function adminRsvpOverrideAction(
       inviteeId: z.string().uuid(),
       status: z.enum(["pending", "attending", "declined"]),
       reason: z.string().trim().min(3).max(300),
+      sendEmail: z.enum(["true", "false"]).optional(),
     })
     .parse({
       inviteeId: formData.get("inviteeId"),
       status: formData.get("status"),
       reason: formData.get("reason"),
+      sendEmail: formData.get("sendEmail") === "true" ? "true" : "false",
     });
   const db = createAdminClient();
   if (!db) return;
@@ -282,6 +287,52 @@ export async function adminRsvpOverrideAction(
       responded_at: new Date().toISOString(),
     })
     .eq("id", invitee.party_id);
+
+  if (parsed.status === "attending" && parsed.sendEmail === "true") {
+    const { data: existingPass } = await db
+      .from("qr_passes")
+      .select("id")
+      .eq("invitee_id", parsed.inviteeId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (!existingPass) {
+      const rawToken = generateRawToken();
+      await db.from("qr_passes").insert({
+        invitee_id: parsed.inviteeId,
+        party_id: invitee.party_id,
+        token_hash: hashToken(rawToken),
+        token_ciphertext: encryptQrToken(rawToken),
+        status: "active",
+      });
+      await db.from("audit_logs").insert({
+        actor_user_id: admin.userId,
+        action: "qr.issue_admin",
+        entity_type: "invitee",
+        entity_id: parsed.inviteeId,
+      });
+    }
+
+    const { data: party } = await db
+      .from("invitation_parties")
+      .select("email")
+      .eq("id", invitee.party_id)
+      .single();
+
+    if (party?.email) {
+      queuePassEmail({
+        partyId: invitee.party_id,
+        email: party.email,
+        purpose: "update",
+        requestId: randomUUID(),
+      }).catch((err) => {
+        logger.error("admin_override_email_failed", {
+          error: err instanceof Error ? err.message : "unknown",
+        });
+      });
+    }
+  }
+
   await db.from("audit_logs").insert({
     actor_user_id: admin.userId,
     action: "rsvp.admin_override",
