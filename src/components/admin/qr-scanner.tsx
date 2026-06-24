@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useActionState, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import {
   checkInAction,
   resolveScanAction,
@@ -12,6 +13,22 @@ import { Badge } from "@/components/ui/badge";
 import { Camera, CameraOff, ScanLine, CheckCircle2, AlertCircle, ImageUp } from "lucide-react";
 
 const initial: ScannerState = { status: "idle" };
+
+function ConfirmCheckInButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button
+      type="submit"
+      variant="secondary"
+      size="default"
+      disabled={pending}
+      className="w-full"
+    >
+      <CheckCircle2 className="h-4 w-4" />
+      {pending ? "Checking in…" : "Confirm check-in"}
+    </Button>
+  );
+}
 
 export function QrScanner() {
   const [state, action, pending] = useActionState(resolveScanAction, initial);
@@ -237,10 +254,7 @@ export function QrScanner() {
             <form action={checkInAction} className="mt-4">
               <input type="hidden" name="inviteeId" value={state.subject.inviteeId} />
               <input type="hidden" name="method" value="qr" />
-              <Button type="submit" variant="secondary" size="default" className="w-full">
-                <CheckCircle2 className="h-4 w-4" />
-                Confirm check-in
-              </Button>
+              <ConfirmCheckInButton />
             </form>
           )}
         </div>

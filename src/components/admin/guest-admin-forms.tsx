@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   createPartyAction,
   importGuestsAction,
@@ -20,9 +21,13 @@ export function CreatePartyForm({ onDone }: { onDone?: () => void }) {
   const router = useRouter();
   useEffect(() => {
     if (state.status === "success") {
+      toast.success(state.message ?? "Guest added");
       router.refresh();
       const t = setTimeout(() => onDone?.(), 600);
       return () => clearTimeout(t);
+    }
+    if (state.status === "error" && state.message) {
+      toast.error(state.message);
     }
   }, [state, router, onDone]);
   return (
@@ -50,9 +55,13 @@ export function ImportGuestsForm({ onDone }: { onDone?: () => void }) {
   const router = useRouter();
   useEffect(() => {
     if (state.status === "success") {
+      toast.success(state.message ?? "Guests imported");
       router.refresh();
       const t = setTimeout(() => onDone?.(), 800);
       return () => clearTimeout(t);
+    }
+    if (state.status === "error" && state.message) {
+      toast.error(state.message);
     }
   }, [state, router, onDone]);
   return (

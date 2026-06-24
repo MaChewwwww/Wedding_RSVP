@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   QrCode,
@@ -12,6 +11,7 @@ import {
   Check,
 } from "lucide-react";
 import { checkInAction, reverseCheckInAction } from "./actions";
+import { useAdminAction } from "@/components/admin/use-admin-action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -65,15 +65,19 @@ export function AttendanceClient({
   search: string;
   checkedInCount: number;
 }) {
-  const router = useRouter();
+  const { pending, run } = useAdminAction();
   const [reverseTarget, setReverseTarget] = React.useState<Row | null>(null);
 
-  async function checkIn(id: string) {
-    const fd = new FormData();
-    fd.set("inviteeId", id);
-    fd.set("method", "manual");
-    await checkInAction(fd);
-    router.refresh();
+  function checkIn(id: string) {
+    run(
+      () => {
+        const fd = new FormData();
+        fd.set("inviteeId", id);
+        fd.set("method", "manual");
+        return checkInAction(fd);
+      },
+      { loading: "Checking in…", success: "Checked in" },
+    );
   }
 
   return (
@@ -167,6 +171,7 @@ export function AttendanceClient({
                     {row.checkedIn ? (
                       <Button
                         onClick={() => setReverseTarget(row)}
+                        disabled={pending}
                         size="sm"
                         variant="outline"
                       >
@@ -176,6 +181,7 @@ export function AttendanceClient({
                     ) : (
                       <Button
                         onClick={() => checkIn(row.id)}
+                        disabled={pending}
                         size="sm"
                         variant="secondary"
                       >
@@ -201,11 +207,13 @@ export function AttendanceClient({
       >
         {reverseTarget && (
           <form
-            action={async (fd) => {
-              await reverseCheckInAction(fd);
-              setReverseTarget(null);
-              router.refresh();
-            }}
+            action={(fd) =>
+              run(() => reverseCheckInAction(fd), {
+                loading: "Reversing…",
+                success: "Check-in reversed",
+                onSuccess: () => setReverseTarget(null),
+              })
+            }
             className="space-y-4"
           >
             <input type="hidden" name="inviteeId" value={reverseTarget.id} />
@@ -228,8 +236,8 @@ export function AttendanceClient({
               >
                 Cancel
               </Button>
-              <Button type="submit" variant="danger" size="sm">
-                Reverse check-in
+              <Button type="submit" variant="danger" size="sm" disabled={pending}>
+                {pending ? "Reversing…" : "Reverse check-in"}
               </Button>
             </div>
           </form>

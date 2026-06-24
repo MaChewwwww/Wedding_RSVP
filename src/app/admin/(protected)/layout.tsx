@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogOut } from "lucide-react";
+import { Toaster } from "sonner";
 import { requireAdmin } from "@/server/auth/admin";
 import { signOutAction } from "./actions";
 import { site } from "@/config/site";
@@ -12,6 +13,18 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-paper text-ink">
+      <Toaster
+        position="bottom-right"
+        richColors
+        closeButton
+        toastOptions={{
+          style: {
+            borderRadius: "14px",
+            fontFamily: "var(--font-sans)",
+          },
+        }}
+      />
+
 
       {/* ══ Desktop Sidebar ══════════════════════════════════ */}
       <aside

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import {
   UserPlus,
   Upload,
@@ -23,12 +22,23 @@ import {
   CreatePartyForm,
   ImportGuestsForm,
 } from "@/components/admin/guest-admin-forms";
+import { useAdminAction } from "@/components/admin/use-admin-action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  AdminTable,
+  Table,
+  TableHead,
+  Th,
+  TableBody,
+  Tr,
+  Td,
+  TableEmpty,
+} from "@/components/admin/admin-table";
 
 type Invitee = {
   id: string;
@@ -55,11 +65,153 @@ const STATUS_OPTIONS = [
 ];
 
 function StatusPill({ status }: { status: string }) {
-  if (status === "attending")
-    return <Badge variant="success">Attending</Badge>;
+  if (status === "attending") return <Badge variant="success">Attending</Badge>;
   if (status === "declined")
     return <Badge variant="danger">Not attending</Badge>;
   return <Badge variant="warning">Undecided</Badge>;
+}
+
+function GuestRow({ party }: { party: Party }) {
+  const guest = (party.invitees ?? []).find((g) => g.is_active);
+  const activePass = (party.qr_passes ?? []).find((p) => p.status === "active");
+  const { pending, run } = useAdminAction();
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+
+  if (!guest) return null;
+
+  function changeStatus(status: string) {
+    if (status === guest!.rsvp_status) return;
+    const label =
+      STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;
+    run(
+      () => {
+        const fd = new FormData();
+        fd.set("inviteeId", guest!.id);
+        fd.set("status", status);
+        fd.set("reason", "Manual status update by admin");
+        return adminRsvpOverrideAction(fd);
+      },
+      { loading: "Updating status…", success: `Marked ${label}` },
+    );
+  }
+
+  function pass(action: () => Promise<void>, kind: "revoke" | "issue") {
+    run(action, {
+      loading: kind === "revoke" ? "Revoking pass…" : "Issuing pass…",
+      success: kind === "revoke" ? "Pass revoked" : "Pass issued",
+    });
+  }
+
+  function remove() {
+    run(
+      () => {
+        const fd = new FormData();
+        fd.set("partyId", party.id);
+        return deleteGuestAction(fd);
+      },
+      { loading: "Deleting guest…", success: "Guest deleted" },
+    );
+  }
+
+  return (
+    <Tr>
+      <Td>
+        <p className="font-medium text-ink">{guest.full_name}</p>
+        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-ink">
+          <Mail className="h-3 w-3" aria-hidden />
+          {party.email || "No email"}
+        </p>
+      </Td>
+      <Td>
+        <StatusPill status={guest.rsvp_status} />
+      </Td>
+      <Td>
+        <Select
+          value={guest.rsvp_status}
+          disabled={pending}
+          aria-label={`Set status for ${guest.full_name}`}
+          onChange={(e) => changeStatus(e.target.value)}
+          className="min-h-9 w-40 py-1.5 text-xs"
+        >
+          {STATUS_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </Select>
+      </Td>
+      <Td>
+        {activePass ? (
+          <Button
+            onClick={() =>
+              pass(() => {
+                const fd = new FormData();
+                fd.set("passId", activePass.id);
+                return revokePassAction(fd);
+              }, "revoke")
+            }
+            disabled={pending}
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+          >
+            <TicketX className="h-3.5 w-3.5" />
+            Revoke
+          </Button>
+        ) : guest.rsvp_status === "attending" ? (
+          <Button
+            onClick={() =>
+              pass(() => {
+                const fd = new FormData();
+                fd.set("inviteeId", guest.id);
+                return reissuePassAction(fd);
+              }, "issue")
+            }
+            disabled={pending}
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+          >
+            <Ticket className="h-3.5 w-3.5" />
+            Issue
+          </Button>
+        ) : (
+          <span className="text-xs text-muted-ink/60">—</span>
+        )}
+      </Td>
+      <Td className="text-right">
+        <Button
+          onClick={() => setConfirmDelete(true)}
+          disabled={pending}
+          size="icon"
+          variant="ghost"
+          title="Delete guest"
+          aria-label="Delete guest"
+          className="h-9 w-9 text-danger hover:bg-[rgba(176,48,80,0.08)]"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </Td>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={() => {
+          setConfirmDelete(false);
+          remove();
+        }}
+        pending={pending}
+        title="Delete this guest?"
+        confirmLabel="Delete guest"
+        message={
+          <>
+            <strong>{party.display_name}</strong> and their passes and check-in
+            history will be permanently removed. This cannot be undone.
+          </>
+        }
+      />
+    </Tr>
+  );
 }
 
 export function GuestsClient({
@@ -69,32 +221,18 @@ export function GuestsClient({
   parties: Party[];
   search: string;
 }) {
-  const router = useRouter();
   const [addOpen, setAddOpen] = React.useState(false);
   const [bulkOpen, setBulkOpen] = React.useState(false);
-  const [deleteTarget, setDeleteTarget] = React.useState<Party | null>(null);
-  const [deleting, setDeleting] = React.useState(false);
 
   const attending = parties.filter((p) => p.rsvp_status === "attending").length;
   const declined = parties.filter((p) => p.rsvp_status === "declined").length;
   const undecided = parties.length - attending - declined;
 
-  async function confirmDelete() {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    const fd = new FormData();
-    fd.set("partyId", deleteTarget.id);
-    await deleteGuestAction(fd);
-    setDeleting(false);
-    setDeleteTarget(null);
-    router.refresh();
-  }
-
   return (
     <div>
       {/* Toolbar */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <form className="relative flex-1 min-w-[16rem] max-w-md" action="">
+        <form className="relative min-w-[16rem] flex-1 max-w-md">
           <Search
             className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60"
             aria-hidden
@@ -106,16 +244,16 @@ export function GuestsClient({
             className="pl-10"
           />
         </form>
-        <Button onClick={() => setAddOpen(true)} variant="primary" size="default">
+        <Button onClick={() => setAddOpen(true)} variant="primary">
           <UserPlus className="h-4 w-4" />
           Add Guest
         </Button>
-        <Button onClick={() => setBulkOpen(true)} variant="secondary" size="default">
+        <Button onClick={() => setBulkOpen(true)} variant="secondary">
           <Upload className="h-4 w-4" />
           Bulk Add
         </Button>
         <a href="/admin/guests/export">
-          <Button variant="outline" size="default">
+          <Button variant="outline">
             <Download className="h-4 w-4" />
             Export
           </Button>
@@ -138,110 +276,28 @@ export function GuestsClient({
         </span>
       </div>
 
-      {/* Guest list */}
-      {parties.length === 0 ? (
-        <div className="rounded-2xl border border-blush/20 bg-paper/60 py-16 text-center">
-          <Users className="mx-auto mb-3 h-8 w-8 text-muted-ink/40" aria-hidden />
-          <p className="text-sm text-muted-ink">
-            No guests found. Add one to get started.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {parties.map((party) => {
-            const guest = (party.invitees ?? []).find((g) => g.is_active);
-            const activePass = (party.qr_passes ?? []).find(
-              (p) => p.status === "active",
-            );
-            if (!guest) return null;
-            return (
-              <article
-                key={party.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-blush/15 bg-paper/80 px-5 py-4 transition-colors hover:bg-blush-light/15"
-              >
-                <div className="min-w-[12rem] flex-1">
-                  <p className="font-semibold text-ink">{guest.full_name}</p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-ink">
-                    <Mail className="h-3 w-3" aria-hidden />
-                    {party.email || "No email"}
-                  </p>
-                </div>
-
-                <StatusPill status={guest.rsvp_status} />
-
-                {/* Inline status override */}
-                <form
-                  action={adminRsvpOverrideAction}
-                  className="flex items-center gap-2"
-                  onChange={(e) => e.currentTarget.requestSubmit()}
-                >
-                  <input type="hidden" name="inviteeId" value={guest.id} />
-                  <input
-                    type="hidden"
-                    name="reason"
-                    value="Manual status update by admin"
-                  />
-                  <Select
-                    name="status"
-                    defaultValue={guest.rsvp_status}
-                    aria-label={`Set status for ${guest.full_name}`}
-                    className="min-h-9 w-40 py-1.5 text-xs"
-                  >
-                    {STATUS_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </Select>
-                </form>
-
-                {/* Pass + delete actions */}
-                <div className="flex items-center gap-1.5">
-                  {activePass ? (
-                    <form action={revokePassAction}>
-                      <input type="hidden" name="passId" value={activePass.id} />
-                      <Button
-                        type="submit"
-                        size="icon"
-                        variant="outline"
-                        title="Revoke pass"
-                        aria-label="Revoke pass"
-                        className="h-9 w-9"
-                      >
-                        <TicketX className="h-4 w-4" />
-                      </Button>
-                    </form>
-                  ) : guest.rsvp_status === "attending" ? (
-                    <form action={reissuePassAction}>
-                      <input type="hidden" name="inviteeId" value={guest.id} />
-                      <Button
-                        type="submit"
-                        size="icon"
-                        variant="outline"
-                        title="Issue pass"
-                        aria-label="Issue pass"
-                        className="h-9 w-9"
-                      >
-                        <Ticket className="h-4 w-4" />
-                      </Button>
-                    </form>
-                  ) : null}
-                  <Button
-                    onClick={() => setDeleteTarget(party)}
-                    size="icon"
-                    variant="ghost"
-                    title="Delete guest"
-                    aria-label="Delete guest"
-                    className="h-9 w-9 text-danger hover:bg-[rgba(176,48,80,0.08)]"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
+      {/* Guest table */}
+      <AdminTable>
+        <Table>
+          <TableHead>
+            <tr>
+              <Th>Guest</Th>
+              <Th>Status</Th>
+              <Th>Set Status</Th>
+              <Th>Pass</Th>
+              <Th className="text-right">Actions</Th>
+            </tr>
+          </TableHead>
+          <TableBody>
+            {parties.length === 0 && (
+              <TableEmpty message="No guests found. Add one to get started." />
+            )}
+            {parties.map((party) => (
+              <GuestRow key={party.id} party={party} />
+            ))}
+          </TableBody>
+        </Table>
+      </AdminTable>
 
       {/* Add Guest modal */}
       <Modal
@@ -262,22 +318,6 @@ export function GuestsClient({
       >
         <ImportGuestsForm onDone={() => setBulkOpen(false)} />
       </Modal>
-
-      {/* Delete confirmation */}
-      <ConfirmDialog
-        open={deleteTarget !== null}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={confirmDelete}
-        pending={deleting}
-        title="Delete this guest?"
-        confirmLabel="Delete guest"
-        message={
-          <>
-            <strong>{deleteTarget?.display_name}</strong> and their passes and
-            check-in history will be permanently removed. This cannot be undone.
-          </>
-        }
-      />
     </div>
   );
 }

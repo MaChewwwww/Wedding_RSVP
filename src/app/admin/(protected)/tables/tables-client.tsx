@@ -1,16 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import {
   Plus,
   Pencil,
   Trash2,
-  Eye,
+  Settings2,
   MapPin,
   Users,
   UserPlus,
   X,
+  Armchair,
 } from "lucide-react";
 import {
   assignTableAction,
@@ -18,6 +18,7 @@ import {
   deleteTableAction,
   updateTableAction,
 } from "./actions";
+import { useAdminAction } from "@/components/admin/use-admin-action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,10 +42,166 @@ type Guest = {
   table_id: string | null;
 };
 
-function statusDot(status: string) {
+function statusColor(status: string) {
   if (status === "attending") return "#5a9c56";
   if (status === "declined") return "#d4516e";
   return "#c8963c";
+}
+
+/* Round-table seat visualization: filled + empty chairs around an arc. */
+function SeatRing({
+  capacity,
+  assigned,
+}: {
+  capacity: number;
+  assigned: number;
+}) {
+  const seats = Array.from({ length: Math.min(capacity, 14) }, (_, i) => i < assigned);
+  const radius = 46;
+  const cx = 60;
+  const cy = 60;
+  return (
+    <svg viewBox="0 0 120 120" className="h-28 w-28" aria-hidden>
+      {/* table top */}
+      <circle cx={cx} cy={cy} r={26} fill="rgba(240,168,188,0.18)" stroke="rgba(212,81,110,0.3)" />
+      <text
+        x={cx}
+        y={cy + 1}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        className="fill-rose font-semibold"
+        style={{ fontSize: "18px", fontFamily: "var(--font-display)" }}
+      >
+        {assigned}/{capacity}
+      </text>
+      {seats.map((filled, i) => {
+        const angle = (i / seats.length) * 2 * Math.PI - Math.PI / 2;
+        const x = cx + radius * Math.cos(angle);
+        const y = cy + radius * Math.sin(angle);
+        return (
+          <circle
+            key={i}
+            cx={x}
+            cy={y}
+            r={6}
+            fill={filled ? "#5a9c56" : "#fde8f0"}
+            stroke={filled ? "#5a9c56" : "#f0a8bc"}
+            strokeWidth={1.5}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
+function TableCard({
+  table,
+  guests,
+  onManage,
+  onEdit,
+  onDelete,
+}: {
+  table: TableRow;
+  guests: Guest[];
+  onManage: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const pct = table.capacity > 0 ? (table.assigned / table.capacity) * 100 : 0;
+  const accent = pct >= 100 ? "#d4516e" : pct >= 80 ? "#c8963c" : "#5a9c56";
+  return (
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-blush/20 bg-paper/95 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+      {/* Accent header */}
+      <div
+        className="flex items-start justify-between gap-2 px-5 py-4"
+        style={{
+          background: `linear-gradient(135deg, ${accent}1f, ${accent}08)`,
+          borderBottom: `1px solid ${accent}26`,
+        }}
+      >
+        <div className="min-w-0">
+          <h3 className="truncate font-display text-xl font-semibold text-ink">
+            {table.name}
+          </h3>
+          <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-ink">
+            {table.location_note ? (
+              <>
+                <MapPin className="h-3 w-3" aria-hidden />
+                {table.location_note}
+              </>
+            ) : (
+              <span className="text-muted-ink/60">No location set</span>
+            )}
+          </p>
+        </div>
+        <Badge variant={table.remaining <= 0 ? "danger" : "success"}>
+          {table.remaining <= 0 ? "Full" : `${table.remaining} open`}
+        </Badge>
+      </div>
+
+      {/* Body: seat ring + guest preview */}
+      <div className="flex gap-4 px-5 py-4">
+        <div className="shrink-0">
+          <SeatRing capacity={table.capacity} assigned={table.assigned} />
+        </div>
+        <div className="min-w-0 flex-1">
+          {guests.length === 0 ? (
+            <p className="flex h-full items-center text-xs text-muted-ink/70">
+              No guests seated yet.
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {guests.slice(0, 4).map((g) => (
+                <li
+                  key={g.id}
+                  className="flex items-center gap-2 truncate text-sm text-ink"
+                >
+                  <span
+                    className="h-1.5 w-1.5 shrink-0 rounded-full"
+                    style={{ background: statusColor(g.rsvp_status) }}
+                  />
+                  <span className="truncate">{g.full_name}</span>
+                </li>
+              ))}
+              {guests.length > 4 && (
+                <li className="text-xs font-medium text-rose">
+                  +{guests.length - 4} more seated
+                </li>
+              )}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="mt-auto flex items-center gap-1.5 border-t border-blush/15 px-4 py-3">
+        <Button onClick={onManage} size="sm" variant="primary" className="flex-1">
+          <Settings2 className="h-4 w-4" />
+          Manage
+        </Button>
+        <Button
+          onClick={onEdit}
+          size="icon"
+          variant="outline"
+          className="h-9 w-9"
+          title="Edit table"
+          aria-label="Edit table"
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          onClick={onDelete}
+          size="icon"
+          variant="ghost"
+          className="h-9 w-9 text-danger hover:bg-[rgba(176,48,80,0.08)]"
+          title="Delete table"
+          aria-label="Delete table"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </article>
+  );
 }
 
 export function TablesClient({
@@ -54,12 +211,11 @@ export function TablesClient({
   tables: TableRow[];
   guests: Guest[];
 }) {
-  const router = useRouter();
+  const { pending, run } = useAdminAction();
   const [addOpen, setAddOpen] = React.useState(false);
   const [editTarget, setEditTarget] = React.useState<TableRow | null>(null);
-  const [viewTarget, setViewTarget] = React.useState<TableRow | null>(null);
+  const [manageTarget, setManageTarget] = React.useState<TableRow | null>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<TableRow | null>(null);
-  const [deleting, setDeleting] = React.useState(false);
 
   const guestsByTable = React.useMemo(() => {
     const map = new Map<string, Guest[]>();
@@ -74,26 +230,10 @@ export function TablesClient({
 
   const unseated = guests.filter((g) => !g.table_id);
 
-  function refresh() {
-    router.refresh();
-  }
-
-  async function confirmDelete() {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    const fd = new FormData();
-    fd.set("tableId", deleteTarget.table_id);
-    await deleteTableAction(fd);
-    setDeleting(false);
-    setDeleteTarget(null);
-    refresh();
-  }
-
-  // Keep the view modal's data fresh after assignments.
-  const viewTable = viewTarget
-    ? tables.find((t) => t.table_id === viewTarget.table_id) ?? viewTarget
+  const manageTable = manageTarget
+    ? tables.find((t) => t.table_id === manageTarget.table_id) ?? manageTarget
     : null;
-  const seated = viewTable ? guestsByTable.get(viewTable.table_id) ?? [] : [];
+  const seated = manageTable ? guestsByTable.get(manageTable.table_id) ?? [] : [];
 
   return (
     <div>
@@ -106,118 +246,23 @@ export function TablesClient({
 
       {tables.length === 0 ? (
         <div className="rounded-2xl border border-blush/20 bg-paper/60 py-16 text-center">
-          <Users className="mx-auto mb-3 h-8 w-8 text-muted-ink/40" aria-hidden />
+          <Armchair className="mx-auto mb-3 h-8 w-8 text-muted-ink/40" aria-hidden />
           <p className="text-sm text-muted-ink">
             No tables yet. Add your first table to start seating guests.
           </p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {tables.map((t) => {
-            const pct =
-              t.capacity > 0 ? Math.round((t.assigned / t.capacity) * 100) : 0;
-            const barColor =
-              pct >= 100 ? "#d4516e" : pct >= 80 ? "#c8963c" : "#5a9c56";
-            const tableGuests = guestsByTable.get(t.table_id) ?? [];
-            return (
-              <article
-                key={t.table_id}
-                className="flex flex-col rounded-2xl border border-blush/20 bg-paper/90 p-5 shadow-sm transition-shadow hover:shadow-md"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-display text-xl font-semibold text-ink">
-                      {t.name}
-                    </h3>
-                    {t.location_note && (
-                      <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-ink">
-                        <MapPin className="h-3 w-3" aria-hidden />
-                        {t.location_note}
-                      </p>
-                    )}
-                  </div>
-                  <Badge variant={t.remaining <= 0 ? "danger" : "muted"}>
-                    {t.assigned}/{t.capacity}
-                  </Badge>
-                </div>
-
-                {/* Capacity bar */}
-                <div className="mt-4">
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-paper-2">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${Math.min(pct, 100)}%`, background: barColor }}
-                    />
-                  </div>
-                  <p className="mt-1.5 text-xs text-muted-ink">
-                    {t.remaining > 0
-                      ? `${t.remaining} seat${t.remaining === 1 ? "" : "s"} open`
-                      : "Full"}
-                  </p>
-                </div>
-
-                {/* Seated preview */}
-                <div className="mt-3 flex-1">
-                  {tableGuests.length === 0 ? (
-                    <p className="text-xs text-muted-ink/70">No guests seated yet.</p>
-                  ) : (
-                    <ul className="space-y-1">
-                      {tableGuests.slice(0, 4).map((g) => (
-                        <li
-                          key={g.id}
-                          className="flex items-center gap-2 text-sm text-ink"
-                        >
-                          <span
-                            className="h-1.5 w-1.5 shrink-0 rounded-full"
-                            style={{ background: statusDot(g.rsvp_status) }}
-                          />
-                          {g.full_name}
-                        </li>
-                      ))}
-                      {tableGuests.length > 4 && (
-                        <li className="text-xs text-muted-ink">
-                          +{tableGuests.length - 4} more
-                        </li>
-                      )}
-                    </ul>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="mt-4 flex items-center gap-1.5 border-t border-blush/15 pt-3">
-                  <Button
-                    onClick={() => setViewTarget(t)}
-                    size="sm"
-                    variant="ghost"
-                    className="flex-1"
-                  >
-                    <Eye className="h-4 w-4" />
-                    View
-                  </Button>
-                  <Button
-                    onClick={() => setEditTarget(t)}
-                    size="icon"
-                    variant="outline"
-                    className="h-9 w-9"
-                    title="Edit table"
-                    aria-label="Edit table"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    onClick={() => setDeleteTarget(t)}
-                    size="icon"
-                    variant="ghost"
-                    className="h-9 w-9 text-danger hover:bg-[rgba(176,48,80,0.08)]"
-                    title="Delete table"
-                    aria-label="Delete table"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </article>
-            );
-          })}
+          {tables.map((t) => (
+            <TableCard
+              key={t.table_id}
+              table={t}
+              guests={guestsByTable.get(t.table_id) ?? []}
+              onManage={() => setManageTarget(t)}
+              onEdit={() => setEditTarget(t)}
+              onDelete={() => setDeleteTarget(t)}
+            />
+          ))}
         </div>
       )}
 
@@ -229,11 +274,13 @@ export function TablesClient({
         description="Capacity is enforced — guests of any RSVP status can be seated."
       >
         <form
-          action={async (fd) => {
-            await createTableAction(fd);
-            setAddOpen(false);
-            refresh();
-          }}
+          action={(fd) =>
+            run(() => createTableAction(fd), {
+              loading: "Creating table…",
+              success: "Table created",
+              onSuccess: () => setAddOpen(false),
+            })
+          }
           className="space-y-4"
         >
           <div className="space-y-1.5">
@@ -250,8 +297,8 @@ export function TablesClient({
             </Label>
             <Input id="locationNote" name="locationNote" placeholder="e.g. Near the stage" />
           </div>
-          <Button type="submit" className="w-full">
-            Create table
+          <Button type="submit" disabled={pending} className="w-full">
+            {pending ? "Creating…" : "Create table"}
           </Button>
         </form>
       </Modal>
@@ -264,11 +311,13 @@ export function TablesClient({
       >
         {editTarget && (
           <form
-            action={async (fd) => {
-              await updateTableAction(fd);
-              setEditTarget(null);
-              refresh();
-            }}
+            action={(fd) =>
+              run(() => updateTableAction(fd), {
+                loading: "Saving changes…",
+                success: "Table updated",
+                onSuccess: () => setEditTarget(null),
+              })
+            }
             className="space-y-4"
           >
             <input type="hidden" name="tableId" value={editTarget.table_id} />
@@ -300,28 +349,27 @@ export function TablesClient({
                 defaultValue={editTarget.location_note ?? ""}
               />
             </div>
-            <Button type="submit" className="w-full">
-              Save changes
+            <Button type="submit" disabled={pending} className="w-full">
+              {pending ? "Saving…" : "Save changes"}
             </Button>
           </form>
         )}
       </Modal>
 
-      {/* View / manage seating modal */}
+      {/* Manage seating modal */}
       <Modal
-        open={viewTable !== null}
-        onClose={() => setViewTarget(null)}
-        title={viewTable?.name}
+        open={manageTable !== null}
+        onClose={() => setManageTarget(null)}
+        title={manageTable ? `Manage — ${manageTable.name}` : undefined}
         description={
-          viewTable
-            ? `${seated.length} of ${viewTable.capacity} seats filled`
+          manageTable
+            ? `${seated.length} of ${manageTable.capacity} seats filled`
             : undefined
         }
         className="max-w-xl"
       >
-        {viewTable && (
+        {manageTable && (
           <div className="space-y-5">
-            {/* Seated guests */}
             <div>
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-ink">
                 Seated guests
@@ -338,49 +386,52 @@ export function TablesClient({
                       <span className="flex items-center gap-2 text-sm text-ink">
                         <span
                           className="h-1.5 w-1.5 rounded-full"
-                          style={{ background: statusDot(g.rsvp_status) }}
+                          style={{ background: statusColor(g.rsvp_status) }}
                         />
                         {g.full_name}
                       </span>
-                      <form
-                        action={async (fd) => {
-                          await assignTableAction(fd);
-                          refresh();
-                        }}
+                      <Button
+                        onClick={() =>
+                          run(
+                            () => {
+                              const fd = new FormData();
+                              fd.set("inviteeId", g.id);
+                              fd.set("tableId", "unassigned");
+                              return assignTableAction(fd);
+                            },
+                            { loading: "Removing…", success: "Guest removed from table" },
+                          )
+                        }
+                        disabled={pending}
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-muted-ink hover:text-danger"
+                        title="Remove from table"
+                        aria-label="Remove from table"
                       >
-                        <input type="hidden" name="inviteeId" value={g.id} />
-                        <input type="hidden" name="tableId" value="unassigned" />
-                        <Button
-                          type="submit"
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-muted-ink hover:text-danger"
-                          title="Remove from table"
-                          aria-label="Remove from table"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </form>
+                        <X className="h-4 w-4" />
+                      </Button>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
 
-            {/* Add guest to table */}
-            {viewTable.remaining > 0 && unseated.length > 0 && (
+            {manageTable.remaining > 0 && unseated.length > 0 && (
               <div className="border-t border-blush/15 pt-4">
                 <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-ink">
                   <UserPlus className="h-3.5 w-3.5" /> Seat a guest
                 </h4>
                 <form
-                  action={async (fd) => {
-                    await assignTableAction(fd);
-                    refresh();
-                  }}
+                  action={(fd) =>
+                    run(() => assignTableAction(fd), {
+                      loading: "Seating guest…",
+                      success: "Guest seated",
+                    })
+                  }
                   className="flex gap-2"
                 >
-                  <input type="hidden" name="tableId" value={viewTable.table_id} />
+                  <input type="hidden" name="tableId" value={manageTable.table_id} />
                   <Select name="inviteeId" required defaultValue="" className="flex-1">
                     <option value="" disabled>
                       Choose a guest…
@@ -391,13 +442,13 @@ export function TablesClient({
                       </option>
                     ))}
                   </Select>
-                  <Button type="submit" variant="secondary">
+                  <Button type="submit" disabled={pending} variant="secondary">
                     Seat
                   </Button>
                 </form>
               </div>
             )}
-            {viewTable.remaining <= 0 && (
+            {manageTable.remaining <= 0 && (
               <p className="rounded-xl bg-[rgba(176,48,80,0.06)] px-3 py-2 text-xs text-danger">
                 This table is full.
               </p>
@@ -410,8 +461,20 @@ export function TablesClient({
       <ConfirmDialog
         open={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={confirmDelete}
-        pending={deleting}
+        onConfirm={() => {
+          const target = deleteTarget;
+          setDeleteTarget(null);
+          if (!target) return;
+          run(
+            () => {
+              const fd = new FormData();
+              fd.set("tableId", target.table_id);
+              return deleteTableAction(fd);
+            },
+            { loading: "Deleting table…", success: "Table deleted" },
+          );
+        }}
+        pending={pending}
         title="Delete this table?"
         confirmLabel="Delete table"
         message={
