@@ -10,6 +10,8 @@ import {
   Undo2,
   Check,
   AlertCircle,
+  Eye,
+  XCircle,
 } from "lucide-react";
 import { site } from "@/config/site";
 import { checkInAction, reverseCheckInAction } from "./actions";
@@ -69,6 +71,7 @@ export function AttendanceClient({
 }) {
   const { pending, run } = useAdminAction();
   const [reverseTarget, setReverseTarget] = React.useState<Row | null>(null);
+  const [viewTarget, setViewTarget] = React.useState<Row | null>(null);
 
   function checkIn(id: string) {
     run(
@@ -155,8 +158,8 @@ export function AttendanceClient({
           <TableHead>
             <tr>
               <Th>Guest</Th>
-              <Th>Table</Th>
-              <Th>RSVP</Th>
+              <Th className="hidden md:table-cell">Table</Th>
+              <Th className="hidden md:table-cell">RSVP</Th>
               <Th>Check-in</Th>
               <Th className="text-right">Actions</Th>
             </tr>
@@ -166,31 +169,44 @@ export function AttendanceClient({
             {rows.map((row) => (
               <Tr key={row.id}>
                 <Td className="font-medium text-ink">{row.full_name}</Td>
-                <Td className="text-muted-ink">
+                <Td className="hidden md:table-cell text-muted-ink">
                   {row.tableName ?? "—"}
                 </Td>
-                <Td>{statusBadge(row.rsvp_status)}</Td>
+                <Td className="hidden md:table-cell">{statusBadge(row.rsvp_status)}</Td>
                 <Td>
                   {row.checkedIn ? (
                     <span className="inline-flex items-center gap-1.5 text-sage-deep">
-                      <Check className="h-4 w-4" />
-                      <span className="text-xs">{fmt(row.lastEventAt)}</span>
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span className="hidden md:inline text-xs">{fmt(row.lastEventAt)}</span>
                     </span>
                   ) : (
-                    <span className="text-xs text-muted-ink">Not checked in</span>
+                    <span className="inline-flex items-center gap-1.5 text-muted-ink">
+                      <XCircle className="h-4 w-4" />
+                      <span className="hidden md:inline text-xs">Not checked in</span>
+                    </span>
                   )}
                 </Td>
                 <Td>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      onClick={() => setViewTarget(row)}
+                      size="sm"
+                      variant="ghost"
+                      className="px-2"
+                      title="View Details"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     {row.checkedIn ? (
                       <Button
                         onClick={() => setReverseTarget(row)}
                         disabled={pending}
                         size="sm"
                         variant="outline"
+                        className="px-2 md:px-3"
                       >
-                        <Undo2 className="h-3.5 w-3.5" />
-                        Reverse
+                        <Undo2 className="h-3.5 w-3.5 md:mr-1.5" />
+                        <span className="hidden md:inline">Reverse</span>
                       </Button>
                     ) : (
                       <Button
@@ -198,9 +214,10 @@ export function AttendanceClient({
                         disabled={pending}
                         size="sm"
                         variant="secondary"
+                        className="px-2 md:px-3"
                       >
-                        <Check className="h-3.5 w-3.5" />
-                        Check in
+                        <Check className="h-3.5 w-3.5 md:mr-1.5" />
+                        <span className="hidden md:inline">Check in</span>
                       </Button>
                     )}
                   </div>
@@ -210,6 +227,74 @@ export function AttendanceClient({
           </TableBody>
         </Table>
       </AdminTable>
+
+      {/* View details modal */}
+      <Modal
+        open={viewTarget !== null}
+        onClose={() => setViewTarget(null)}
+        title="Guest Details"
+        description={viewTarget?.full_name}
+        className="max-w-md"
+      >
+        {viewTarget && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-ink block mb-1">RSVP Status</span>
+                {statusBadge(viewTarget.rsvp_status)}
+              </div>
+              <div>
+                <span className="text-muted-ink block mb-1">Table</span>
+                <span className="font-medium text-ink">{viewTarget.tableName ?? "Unassigned"}</span>
+              </div>
+              <div className="col-span-2">
+                <span className="text-muted-ink block mb-1">Check-in Status</span>
+                {viewTarget.checkedIn ? (
+                  <span className="inline-flex items-center gap-1.5 text-sage-deep">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span className="font-medium">{fmt(viewTarget.lastEventAt)}</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-muted-ink">
+                    <XCircle className="h-4 w-4" />
+                    <span>Not checked in</span>
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t border-butter/20">
+              <Button variant="ghost" size="sm" onClick={() => setViewTarget(null)}>
+                Close
+              </Button>
+              {viewTarget.checkedIn ? (
+                <Button
+                  onClick={() => {
+                    setViewTarget(null);
+                    setReverseTarget(viewTarget);
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Undo2 className="h-3.5 w-3.5 mr-1.5" />
+                  Reverse check-in
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    setViewTarget(null);
+                    checkIn(viewTarget.id);
+                  }}
+                  variant="secondary"
+                  size="sm"
+                >
+                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                  Check in
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* Reverse check-in modal */}
       <Modal
