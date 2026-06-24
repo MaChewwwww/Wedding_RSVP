@@ -9,7 +9,9 @@ import {
   Clock,
   Undo2,
   Check,
+  AlertCircle,
 } from "lucide-react";
+import { site } from "@/config/site";
 import { checkInAction, reverseCheckInAction } from "./actions";
 import { useAdminAction } from "@/components/admin/use-admin-action";
 import { Button } from "@/components/ui/button";
@@ -80,8 +82,20 @@ export function AttendanceClient({
     );
   }
 
+  const isEarly = new Date() < new Date(`${site.event.weddingDate}T00:00:00`);
+
   return (
     <div>
+      {/* Early testing warning */}
+      {isEarly && (
+        <div className="mb-6 flex gap-3 items-start rounded-xl border border-butter/30 bg-butter-light/20 p-4 text-sm text-butter-deep">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
+          <p>
+            <strong>Note:</strong> It is not yet the wedding date ({site.event.weddingDate}). You can still see attending guests and check them in for testing purposes.
+          </p>
+        </div>
+      )}
+
       {/* Summary + scanner link */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div

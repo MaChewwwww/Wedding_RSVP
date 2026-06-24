@@ -39,6 +39,11 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
   const router = useRouter();
   const env = useEnvelope();
 
+  const [stage, setStage] = React.useState<"lookup" | "confirm" | "rsvp" | "success">("lookup");
+  const [searchAgain, setSearchAgain] = React.useState(false);
+  const [party, setParty] = React.useState<PartyView | null>(null);
+  const [passes, setPasses] = React.useState<PassView[]>([]);
+
   React.useEffect(() => {
     if (env && !env.opened) {
       setStage("lookup");
@@ -59,10 +64,6 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
     initialRsvp,
   );
 
-  const [stage, setStage] = React.useState<"lookup" | "confirm" | "rsvp" | "success">("lookup");
-  const [searchAgain, setSearchAgain] = React.useState(false);
-  const [party, setParty] = React.useState<PartyView | null>(null);
-  const [passes, setPasses] = React.useState<PassView[]>([]);
 
   // Stage 1 -> Stage 2
   React.useEffect(() => {

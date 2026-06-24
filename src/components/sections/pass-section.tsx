@@ -96,7 +96,7 @@ export function PassSection({
                     We Are Excited to See You!
                   </h3>
                   <p className="text-sm text-muted-ink leading-relaxed max-w-[280px]">
-                    Your presence is our greatest gift. We can't wait to share this beautiful day, laugh, and celebrate together!
+                    Your presence is our greatest gift. We can&apos;t wait to share this beautiful day, laugh, and celebrate together!
                   </p>
                   <div className="mt-6 text-rose/80 text-sm tracking-[0.1em] font-medium">
                     {weddingDate || site.event.weddingDate}

@@ -121,7 +121,7 @@ export async function loadAttendanceRoster(search?: string) {
     .eq("is_active", true)
     .order("full_name", { ascending: true });
   if (search?.trim()) query = query.ilike("full_name", `%${search.trim()}%`);
-  const { data } = await query.limit(100);
+  const { data } = await query.limit(1000);
   return data ?? [];
 }
 
