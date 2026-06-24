@@ -69,22 +69,35 @@ export async function createPartyAction(
   return { status: "success", message: "Guest invitation created." };
 }
 
-export async function archivePartyAction(formData: FormData): Promise<void> {
+export async function deleteGuestAction(formData: FormData): Promise<void> {
   const admin = await requireAdmin();
   const partyId = z.string().uuid().parse(formData.get("partyId"));
   const db = createAdminClient();
   if (!db) return;
-  await db
+
+  const { data: party } = await db
     .from("invitation_parties")
-    .update({ status: "archived" })
+    .select("display_name")
+    .eq("id", partyId)
+    .single();
+
+  // Hard delete. FK cascades remove invitees, qr_passes, attendance_events,
+  // and guest_sessions for this party.
+  const { error } = await db
+    .from("invitation_parties")
+    .delete()
     .eq("id", partyId);
+  if (error) throw new Error(error.message);
+
   await db.from("audit_logs").insert({
     actor_user_id: admin.userId,
-    action: "party.archive",
+    action: "guest.delete",
     entity_type: "invitation_party",
     entity_id: partyId,
+    before: { full_name: party?.display_name ?? null },
   });
   revalidatePath("/admin/guests");
+  revalidatePath("/admin");
 }
 
 export async function importGuestsAction(

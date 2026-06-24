@@ -44,12 +44,6 @@ export async function resolveScanAction(
   if (!subject) {
     return { status: "invalid", message: "This pass is invalid or revoked." };
   }
-  if (subject.rsvpStatus !== "attending") {
-    return {
-      status: "invalid",
-      message: "This guest is not currently marked attending.",
-    };
-  }
   return { status: "found", subject };
 }
 
@@ -58,8 +52,8 @@ export async function checkInAction(formData: FormData): Promise<void> {
   const inviteeId = z.string().uuid().parse(formData.get("inviteeId"));
   const method = z.enum(["qr", "manual"]).parse(formData.get("method"));
   const subject = await loadAttendanceSubject(inviteeId);
-  if (!subject || subject.rsvpStatus !== "attending") {
-    throw new Error("Only active attending invitees may be checked in.");
+  if (!subject) {
+    throw new Error("This guest could not be found.");
   }
   await recordAttendance({
     inviteeId,

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   createPartyAction,
   importGuestsAction,
@@ -14,8 +15,16 @@ import { CheckCircle2, AlertCircle } from "lucide-react";
 
 const initial: AdminFormState = { status: "idle" };
 
-export function CreatePartyForm() {
+export function CreatePartyForm({ onDone }: { onDone?: () => void }) {
   const [state, action, pending] = useActionState(createPartyAction, initial);
+  const router = useRouter();
+  useEffect(() => {
+    if (state.status === "success") {
+      router.refresh();
+      const t = setTimeout(() => onDone?.(), 600);
+      return () => clearTimeout(t);
+    }
+  }, [state, router, onDone]);
   return (
     <form action={action} className="space-y-4">
       <div className="space-y-1.5">
@@ -36,8 +45,16 @@ export function CreatePartyForm() {
   );
 }
 
-export function ImportGuestsForm() {
+export function ImportGuestsForm({ onDone }: { onDone?: () => void }) {
   const [state, action, pending] = useActionState(importGuestsAction, initial);
+  const router = useRouter();
+  useEffect(() => {
+    if (state.status === "success") {
+      router.refresh();
+      const t = setTimeout(() => onDone?.(), 800);
+      return () => clearTimeout(t);
+    }
+  }, [state, router, onDone]);
   return (
     <form action={action} className="space-y-4">
       <div className="space-y-1.5">

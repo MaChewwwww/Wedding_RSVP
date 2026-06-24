@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Camera, CameraOff, ScanLine, CheckCircle2, AlertCircle } from "lucide-react";
+import { Camera, CameraOff, ScanLine, CheckCircle2, AlertCircle, ImageUp } from "lucide-react";
 
 const initial: ScannerState = { status: "idle" };
 
@@ -19,6 +19,26 @@ export function QrScanner() {
   const [scannerError, setScannerError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<{ stop: () => void } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function decodeFromFile(file: File) {
+    setScannerError(null);
+    const url = URL.createObjectURL(file);
+    try {
+      const { BrowserQRCodeReader } = await import("@zxing/browser");
+      const reader = new BrowserQRCodeReader();
+      const result = await reader.decodeFromImageUrl(url);
+      const formData = new FormData();
+      formData.set("scan", result.getText());
+      startTransition(() => action(formData));
+    } catch {
+      setScannerError(
+        "No QR code found in that image. Try a clearer photo or the camera.",
+      );
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
 
   async function startScanner() {
     setScannerError(null);
@@ -101,7 +121,7 @@ export function QrScanner() {
       </div>
 
       {/* Controls */}
-      <div className="flex gap-3 px-5 py-4">
+      <div className="flex flex-wrap gap-3 px-5 py-4">
         {!running ? (
           <Button onClick={startScanner} type="button" variant="primary" size="default">
             <Camera className="h-4 w-4" />
@@ -113,6 +133,26 @@ export function QrScanner() {
             Stop camera
           </Button>
         )}
+        <Button
+          onClick={() => fileRef.current?.click()}
+          type="button"
+          variant="outline"
+          size="default"
+        >
+          <ImageUp className="h-4 w-4" />
+          Upload QR image
+        </Button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) decodeFromFile(file);
+            e.target.value = "";
+          }}
+        />
       </div>
 
       {/* Manual token entry */}

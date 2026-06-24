@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { loadAuditLog, type AuditRow } from "@/server/admin/operations";
 import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,18 +11,43 @@ import {
   Td,
   TableEmpty,
 } from "@/components/admin/admin-table";
+import {
+  UserPlus,
+  Trash2,
+  CalendarCheck,
+  Ticket,
+  Grid2x2,
+  Armchair,
+  ScanLine,
+  Activity,
+} from "lucide-react";
 
-function actionBadge(action: string) {
-  if (action.startsWith("rsvp."))    return <Badge variant="lavender">{action}</Badge>;
-  if (action.startsWith("party."))   return <Badge variant="default">{action}</Badge>;
-  if (action.startsWith("qr."))      return <Badge variant="sky">{action}</Badge>;
-  if (action.startsWith("table."))   return <Badge variant="muted">{action}</Badge>;
-  if (action.startsWith("invitee.")) return <Badge variant="success">{action}</Badge>;
-  return <Badge variant="muted">{action}</Badge>;
-}
+const KIND_ICON: Record<AuditRow["actionKind"], typeof Activity> = {
+  create: UserPlus,
+  delete: Trash2,
+  rsvp: CalendarCheck,
+  pass: Ticket,
+  table: Grid2x2,
+  seating: Armchair,
+  checkin: ScanLine,
+  other: Activity,
+};
 
-function formatTimestamp(ts: string | null | undefined) {
-  if (!ts) return "—";
+const KIND_VARIANT: Record<
+  AuditRow["actionKind"],
+  React.ComponentProps<typeof Badge>["variant"]
+> = {
+  create: "success",
+  delete: "danger",
+  rsvp: "lavender",
+  pass: "sky",
+  table: "muted",
+  seating: "default",
+  checkin: "success",
+  other: "muted",
+};
+
+function formatTimestamp(ts: string) {
   try {
     return new Intl.DateTimeFormat("en-PH", {
       dateStyle: "medium",
@@ -34,52 +59,53 @@ function formatTimestamp(ts: string | null | undefined) {
 }
 
 export default async function AuditPage() {
-  const db = createAdminClient();
-  const { data } = db
-    ? await db
-        .from("audit_logs")
-        .select("id, action, entity_type, entity_id, created_at")
-        .order("created_at", { ascending: false })
-        .limit(200)
-    : { data: [] };
+  const rows = await loadAuditLog(200);
 
   return (
     <div className="mx-auto w-full max-w-7xl px-5 py-8">
       <PageHeader
-        title="Audit History"
-        subtitle={`Showing the last ${(data ?? []).length} events — most recent first.`}
+        title="Activity History"
+        subtitle={`The last ${rows.length} actions — most recent first.`}
       />
 
       <AdminTable>
         <Table>
           <TableHead>
             <tr>
-              <Th>Timestamp</Th>
-              <Th>Action</Th>
-              <Th>Entity type</Th>
-              <Th>Identifier</Th>
+              <Th>When</Th>
+              <Th>Who</Th>
+              <Th>What</Th>
+              <Th>Guest / Table</Th>
+              <Th>Details</Th>
             </tr>
           </TableHead>
           <TableBody>
-            {(data ?? []).length === 0 && (
-              <TableEmpty message="No audit events recorded yet." />
+            {rows.length === 0 && (
+              <TableEmpty message="No activity recorded yet." />
             )}
-            {(data ?? []).map((entry) => (
-              <Tr key={entry.id}>
-                <Td className="whitespace-nowrap text-xs text-muted-ink">
-                  {formatTimestamp(entry.created_at)}
-                </Td>
-                <Td>{actionBadge(entry.action)}</Td>
-                <Td className="text-sm text-muted-ink capitalize">
-                  {entry.entity_type?.replace(/_/g, " ")}
-                </Td>
-                <Td>
-                  <code className="rounded bg-blush-light px-1.5 py-0.5 font-mono text-xs text-rose">
-                    {entry.entity_id ? entry.entity_id.slice(0, 12) + "…" : "—"}
-                  </code>
-                </Td>
-              </Tr>
-            ))}
+            {rows.map((entry) => {
+              const Icon = KIND_ICON[entry.actionKind];
+              return (
+                <Tr key={entry.id}>
+                  <Td className="whitespace-nowrap text-xs text-muted-ink">
+                    {formatTimestamp(entry.createdAt)}
+                  </Td>
+                  <Td className="text-sm text-ink">{entry.actorName}</Td>
+                  <Td>
+                    <Badge variant={KIND_VARIANT[entry.actionKind]}>
+                      <Icon className="h-3 w-3" />
+                      {entry.actionLabel}
+                    </Badge>
+                  </Td>
+                  <Td className="text-sm font-medium text-ink">
+                    {entry.subject}
+                  </Td>
+                  <Td className="text-xs text-muted-ink">
+                    {entry.detail ?? "—"}
+                  </Td>
+                </Tr>
+              );
+            })}
           </TableBody>
         </Table>
       </AdminTable>
