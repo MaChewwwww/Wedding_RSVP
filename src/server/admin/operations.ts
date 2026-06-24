@@ -113,16 +113,37 @@ export async function loadTableAdminData() {
 export async function loadAttendanceRoster(search?: string) {
   const db = createAdminClient();
   if (!db) return [];
+  
   let query = db
     .from("invitees")
     .select(
-      "id, full_name, rsvp_status, is_active, tables(name), invitee_attendance_current(is_checked_in, last_event_at)",
+      "id, full_name, rsvp_status, is_active, tables(name)"
     )
     .eq("is_active", true)
     .order("full_name", { ascending: true });
+    
   if (search?.trim()) query = query.ilike("full_name", `%${search.trim()}%`);
-  const { data } = await query.limit(1000);
-  return data ?? [];
+  const { data: inviteesData, error: inviteesError } = await query.limit(1000);
+  
+  if (inviteesError || !inviteesData) return [];
+
+  const ids = inviteesData.map((i) => i.id);
+  const { data: attData } = await db
+    .from("invitee_attendance_current")
+    .select("invitee_id, is_checked_in, last_event_at")
+    .in("invitee_id", ids);
+
+  const attMap = new Map();
+  if (attData) {
+    for (const att of attData) {
+      attMap.set(att.invitee_id, att);
+    }
+  }
+
+  return inviteesData.map((inv) => ({
+    ...inv,
+    invitee_attendance_current: attMap.get(inv.id) || null,
+  }));
 }
 
 export type AuditRow = {

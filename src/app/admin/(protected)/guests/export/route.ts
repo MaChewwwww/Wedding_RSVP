@@ -6,12 +6,32 @@ export async function GET() {
   await requireAdmin();
   const db = createAdminClient();
   if (!db) return new Response("Backend not configured.", { status: 503 });
-  const { data } = await db
+  const { data: inviteesData, error } = await db
     .from("invitees")
     .select(
-      "full_name, rsvp_status, table_id, is_active, invitation_parties!inner(display_name, email, status), tables(name), invitee_attendance_current(is_checked_in, last_event_at)",
+      "id, full_name, rsvp_status, table_id, is_active, invitation_parties!inner(display_name, email, status), tables(name)"
     )
     .order("full_name", { ascending: true });
+
+  if (error || !inviteesData) return new Response("Failed to load guests.", { status: 500 });
+
+  const ids = inviteesData.map((i) => i.id);
+  const { data: attData } = await db
+    .from("invitee_attendance_current")
+    .select("invitee_id, is_checked_in, last_event_at")
+    .in("invitee_id", ids);
+
+  const attMap = new Map();
+  if (attData) {
+    for (const att of attData) {
+      attMap.set(att.invitee_id, att);
+    }
+  }
+
+  const data = inviteesData.map((inv) => ({
+    ...inv,
+    invitee_attendance_current: attMap.get(inv.id) || null,
+  }));
 
   const header = [
     "full_name",
