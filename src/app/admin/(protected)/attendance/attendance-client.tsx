@@ -192,7 +192,7 @@ export function AttendanceClient({
                       onClick={() => setViewTarget(row)}
                       size="sm"
                       variant="ghost"
-                      className="px-2"
+                      className="h-8 w-8 shrink-0 px-0"
                       title="View Details"
                     >
                       <Eye className="h-4 w-4" />
@@ -203,7 +203,7 @@ export function AttendanceClient({
                         disabled={pending}
                         size="sm"
                         variant="outline"
-                        className="px-2 md:px-3"
+                        className="h-8 w-8 shrink-0 px-0 md:h-9 md:w-auto md:px-3"
                       >
                         <Undo2 className="h-3.5 w-3.5 md:mr-1.5" />
                         <span className="hidden md:inline">Reverse</span>
@@ -214,7 +214,7 @@ export function AttendanceClient({
                         disabled={pending}
                         size="sm"
                         variant="secondary"
-                        className="px-2 md:px-3"
+                        className="h-8 w-8 shrink-0 px-0 md:h-9 md:w-auto md:px-3"
                       >
                         <Check className="h-3.5 w-3.5 md:mr-1.5" />
                         <span className="hidden md:inline">Check in</span>
