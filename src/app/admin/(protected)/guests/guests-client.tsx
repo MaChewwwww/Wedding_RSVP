@@ -290,24 +290,29 @@ export function GuestsClient({
       {/* Toolbar */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <form 
-          className="relative min-w-[16rem] flex-1 max-w-md"
+          className="relative min-w-[16rem] flex-1 max-w-md flex gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
-            const q = fd.get("search") as string;
-            router.push(`?search=${encodeURIComponent(q)}`);
+            const q = fd.get("q") as string;
+            router.push(`?q=${encodeURIComponent(q)}`);
           }}
         >
-          <Search
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60"
-            aria-hidden
-          />
-          <Input
-            name="q"
-            defaultValue={search}
-            placeholder="Search guests by name or email…"
-            className="pl-10"
-          />
+          <div className="relative flex-1">
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60"
+              aria-hidden
+            />
+            <Input
+              name="q"
+              defaultValue={search}
+              placeholder="Search guests by name or email…"
+              className="pl-10 w-full"
+            />
+          </div>
+          <Button type="submit" variant="outline">
+            Search
+          </Button>
         </form>
         <Button onClick={() => setAddOpen(true)} variant="primary">
           <UserPlus className="h-4 w-4" />
