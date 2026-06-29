@@ -3,9 +3,10 @@ import { render } from "@react-email/render";
 import { createHash } from "node:crypto";
 import { serverEnv, env } from "@/config/env";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { logger } from "@/lib/logger";
 import { site } from "@/config/site";
 import { PassEmail } from "./pass-email";
+import { logger } from "@/lib/logger";
+import axios from "axios";
 
 /*
   Email delivery via Resend (docs/architecture.md "Email architecture",
@@ -43,12 +44,22 @@ export async function queuePassEmail(
 ): Promise<QueuePassEmailResult> {
   const cfg = serverEnv();
   if (!cfg.ENABLE_EMAIL_DELIVERY) {
+    logger.info("email_send_skipped", { reason: "Email delivery is disabled.", partyId: args.partyId });
     return { ok: false, reason: "Email delivery is disabled." };
   }
+  
   const apiKey = cfg.BREVO_API_KEY;
   const from = cfg.BREVO_FROM_EMAIL;
   const db = createAdminClient();
+  
   if (!apiKey || !from || !db) {
+    logger.warn("email_send_skipped", { 
+      reason: "Email backend not configured.", 
+      hasApiKey: !!apiKey, 
+      hasFrom: !!from, 
+      hasDb: !!db,
+      partyId: args.partyId
+    });
     return { ok: false, reason: "Email backend not configured." };
   }
 
@@ -151,10 +162,16 @@ export async function queuePassEmail(
       },
       { onConflict: "idempotency_key", ignoreDuplicates: false },
     )
-    .select("id")
+    .select("id, status")
     .single();
   if (insertErr || !delivery) {
-    return { ok: false, reason: "Could not record delivery." };
+    logger.warn("email_send_skipped", { reason: "Could not create delivery record.", error: insertErr, partyId: args.partyId });
+    return { ok: false, reason: "Could not create delivery record." };
+  }
+
+  if (delivery.status === "sent") {
+    logger.info("email_send_skipped", { reason: "Email already sent.", partyId: args.partyId });
+    return { ok: false, reason: "Email already sent." };
   }
 
   const passUrl = `${env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}/pass`;
@@ -211,30 +228,27 @@ END:VCALENDAR`;
       PassEmail({ partyName, passUrl, googleCalendarUrl, passes: passesWithUrls }),
     );
 
-    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      cache: "no-store",
-      headers: {
-        "api-key": apiKey,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "User-Agent": "Wedding-RSVP-App/1.0",
-      },
-      body: JSON.stringify({
+    const res = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
         sender: { name: senderName, email: senderEmail },
         to: [{ email: args.email }],
         subject: "Your Wedding Pass",
         htmlContent,
         attachment: brevoAttachments.length > 0 ? brevoAttachments : undefined,
-      }),
-    });
+      },
+      {
+        headers: {
+          "api-key": apiKey.trim(),
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "User-Agent": "Wedding-RSVP-App/1.0",
+        },
+        timeout: 15000,
+      }
+    );
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Brevo API error: ${res.status} ${errorText}`);
-    }
-
-    const sent = await res.json();
+    const sent = res.data;
 
     await db
       .from("email_deliveries")
@@ -247,16 +261,24 @@ END:VCALENDAR`;
     });
     return { ok: true, deliveryId: delivery.id };
   } catch (err) {
+    let errorMessage = "unknown";
+    if (axios.isAxiosError(err)) {
+      errorMessage = err.response?.data ? `Brevo API error: ${err.response.status} ${JSON.stringify(err.response.data)}` : err.message;
+    } else if (err instanceof Error) {
+      errorMessage = err.cause ? `${err.message} (${String(err.cause)})` : err.message;
+    }
+
     await db
       .from("email_deliveries")
       .update({
         status: "failed",
-        error_code: err instanceof Error ? err.message.slice(0, 120) : "unknown",
+        error_code: errorMessage.slice(0, 120),
       })
       .eq("id", delivery.id);
+    
     logger.error("email_send_failed", { 
       requestId: args.requestId,
-      error: err instanceof Error ? (err.cause ? `${err.message} (${String(err.cause)})` : err.message) : "unknown",
+      error: errorMessage,
     });
     return { ok: false, reason: "Email send failed." };
   }
