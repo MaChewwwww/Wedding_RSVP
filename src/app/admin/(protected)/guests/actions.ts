@@ -5,7 +5,6 @@ import { z } from "zod";
 import { requireAdmin } from "@/server/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeName } from "@/server/matching/normalize";
-import { parseSimpleCsv } from "@/server/admin/csv";
 import { generateRawToken, hashToken } from "@/server/qr/token";
 import { encryptQrToken } from "@/server/qr/encryption";
 import { randomUUID } from "node:crypto";
@@ -37,6 +36,18 @@ export async function createPartyAction(
 
   const db = createAdminClient();
   if (!db) return { status: "error", message: "Backend not configured." };
+  
+  const normalized = normalizeName(parsed.data.fullName);
+  const { data: existing } = await db
+    .from("invitees")
+    .select("id")
+    .eq("normalized_name", normalized)
+    .maybeSingle();
+    
+  if (existing) {
+    return { status: "error", message: `A guest named "${parsed.data.fullName}" already exists.` };
+  }
+
   const { data: party, error: partyError } = await db
     .from("invitation_parties")
     .insert({
@@ -110,26 +121,47 @@ export async function importGuestsAction(
   const admin = await requireAdmin();
   const csv = z.string().min(1).max(500_000).safeParse(formData.get("csv"));
   if (!csv.success) return { status: "error", message: "Paste a valid CSV." };
-  const rows = parseSimpleCsv(csv.data);
+  const lines = csv.data.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+  const rows = lines.map(line => {
+    const parts = line.split(",");
+    return {
+      full_name: parts[0].trim(),
+      email: parts.length > 1 ? parts[1].trim() : null
+    };
+  });
+
   if (rows.length === 0) {
-    return { status: "error", message: "CSV must include a header and data rows." };
+    return { status: "error", message: "No data provided." };
   }
 
   for (const row of rows) {
-    const fullName = row.full_name?.trim();
-    if (!fullName) {
+    if (!row.full_name) {
       return {
         status: "error",
-        message: "Every row requires full_name.",
+        message: "Every row requires a name.",
       };
     }
   }
 
   const db = createAdminClient();
   if (!db) return { status: "error", message: "Backend not configured." };
+
+  const { data: existingInvitees } = await db.from("invitees").select("normalized_name");
+  const existingSet = new Set((existingInvitees || []).map(i => i.normalized_name));
+
   let created = 0;
+  let skipped = 0;
   for (const row of rows) {
     const fullName = row.full_name.trim();
+    const normalized = normalizeName(fullName);
+    
+    if (existingSet.has(normalized)) {
+      skipped++;
+      continue;
+    }
+    
+    existingSet.add(normalized); // Prevent duplicates within the CSV itself
+
     const { data: party, error } = await db
       .from("invitation_parties")
       .insert({
@@ -169,7 +201,7 @@ export async function importGuestsAction(
   revalidatePath("/admin/guests");
   return {
     status: "success",
-    message: `Imported ${created} guest invitations.`,
+    message: `Imported ${created} guests.${skipped > 0 ? ` Skipped ${skipped} duplicates.` : ""}`,
   };
 }
 

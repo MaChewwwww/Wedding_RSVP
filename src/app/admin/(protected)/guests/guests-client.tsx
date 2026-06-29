@@ -353,7 +353,7 @@ export function GuestsClient({
         open={bulkOpen}
         onClose={() => setBulkOpen(false)}
         title="Bulk Add Guests"
-        description="Paste CSV with a full_name column (email optional)."
+        description="Add guests one per line. Format: Name, Email (email is optional)"
       >
         <ImportGuestsForm onDone={() => setBulkOpen(false)} />
       </Modal>

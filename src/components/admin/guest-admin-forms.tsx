@@ -67,18 +67,18 @@ export function ImportGuestsForm({ onDone }: { onDone?: () => void }) {
   return (
     <form action={action} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="csv">CSV data</Label>
+        <Label htmlFor="csv">Guest List</Label>
         <Textarea
           id="csv"
           name="csv"
           rows={7}
-          placeholder={"full_name,email\nJuan dela Cruz,juan@example.com"}
+          placeholder={"Juan dela Cruz, juan@example.com\nMaria Clara\nJose Rizal, jose@example.com"}
           required
           className="font-mono text-xs"
         />
       </div>
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Importing…" : "Import CSV"}
+        {pending ? "Importing…" : "Import Guests"}
       </Button>
       <FormMessage state={state} />
     </form>

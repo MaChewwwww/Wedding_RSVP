@@ -274,7 +274,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
                     onChange={(e) => setAttendanceState(e.target.value)}
                     className="sr-only"
                   />
-                  <span>{choice.label}</span>
+                  <span className="text-center">{choice.label}</span>
                 </label>
               );
             })}
