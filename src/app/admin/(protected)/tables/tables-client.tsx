@@ -208,6 +208,29 @@ function TableCard({
   );
 }
 
+function GuestSearchCombobox({ guests }: { guests: Guest[] }) {
+  const [search, setSearch] = React.useState("");
+  const selected = guests.find((g) => g.full_name === search);
+  return (
+    <div className="flex-1 relative">
+      <input type="hidden" name="inviteeId" value={selected?.id ?? ""} />
+      <Input
+        list="unseated-guests"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Type or select a guest…"
+        required
+        className="w-full"
+      />
+      <datalist id="unseated-guests">
+        {guests.map((g) => (
+          <option key={g.id} value={g.full_name} />
+        ))}
+      </datalist>
+    </div>
+  );
+}
+
 export function TablesClient({
   tables,
   guests,
@@ -427,25 +450,18 @@ export function TablesClient({
                   <UserPlus className="h-3.5 w-3.5" /> Seat a guest
                 </h4>
                 <form
-                  action={(fd) =>
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.currentTarget);
                     run(() => assignTableAction(fd), {
                       loading: "Seating guest…",
                       success: "Guest seated",
-                    })
-                  }
+                    });
+                  }}
                   className="flex gap-2"
                 >
                   <input type="hidden" name="tableId" value={manageTable.table_id} />
-                  <Select name="inviteeId" required defaultValue="" className="flex-1">
-                    <option value="" disabled>
-                      Choose a guest…
-                    </option>
-                    {unseated.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.full_name}
-                      </option>
-                    ))}
-                  </Select>
+                  <GuestSearchCombobox guests={unseated} />
                   <Button type="submit" disabled={pending} variant="secondary">
                     Seat
                   </Button>

@@ -28,7 +28,7 @@ export default async function AdminLayout({
 
       {/* ══ Desktop Sidebar ══════════════════════════════════ */}
       <aside
-        className="hidden w-64 flex-col md:flex"
+        className="hidden w-64 flex-col md:flex sticky top-0 h-screen"
         style={{
           background: "rgba(253,251,247,0.98)",
           borderRight: "1px solid rgba(240,168,188,0.22)",

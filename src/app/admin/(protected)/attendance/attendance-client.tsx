@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   QrCode,
   Search,
@@ -32,6 +33,8 @@ import {
   Tr,
   Td,
   TableEmpty,
+  useTablePagination,
+  TablePagination,
 } from "@/components/admin/admin-table";
 
 type Row = {
@@ -71,10 +74,13 @@ export function AttendanceClient({
   search: string;
   checkedInCount: number;
 }) {
+  const router = useRouter();
   const { pending, run } = useAdminAction();
   const [reverseTarget, setReverseTarget] = React.useState<Row | null>(null);
   const [viewTarget, setViewTarget] = React.useState<Row | null>(null);
   const [updateRsvpTarget, setUpdateRsvpTarget] = React.useState<Row | null>(null);
+
+  const { page, setPage, totalPages, currentData } = useTablePagination(rows, 20);
 
   function checkIn(id: string) {
     run(
@@ -137,7 +143,15 @@ export function AttendanceClient({
       </div>
 
       {/* Search */}
-      <form className="mb-6 flex max-w-md gap-2">
+      <form 
+        className="mb-6 flex max-w-md gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          const q = fd.get("q") as string;
+          router.push(`?q=${encodeURIComponent(q)}`);
+        }}
+      >
         <div className="relative flex-1">
           <Search
             className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60"
@@ -169,7 +183,7 @@ export function AttendanceClient({
           </TableHead>
           <TableBody>
             {rows.length === 0 && <TableEmpty message="No guests found." />}
-            {rows.map((row) => (
+            {currentData.map((row) => (
               <Tr key={row.id}>
                 <Td className="font-medium text-ink">{row.full_name}</Td>
                 <Td className="hidden md:table-cell text-muted-ink">
@@ -239,6 +253,7 @@ export function AttendanceClient({
             ))}
           </TableBody>
         </Table>
+        <TablePagination page={page} totalPages={totalPages} setPage={setPage} />
       </AdminTable>
 
       {/* View details modal */}

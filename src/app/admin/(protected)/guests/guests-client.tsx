@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   UserPlus,
   Upload,
@@ -39,6 +40,8 @@ import {
   Tr,
   Td,
   TableEmpty,
+  useTablePagination,
+  TablePagination,
 } from "@/components/admin/admin-table";
 
 type Invitee = {
@@ -272,6 +275,7 @@ export function GuestsClient({
   parties: Party[];
   search: string;
 }) {
+  const router = useRouter();
   const [addOpen, setAddOpen] = React.useState(false);
   const [bulkOpen, setBulkOpen] = React.useState(false);
 
@@ -279,11 +283,21 @@ export function GuestsClient({
   const declined = parties.filter((p) => p.rsvp_status === "declined").length;
   const undecided = parties.length - attending - declined;
 
+  const { page, setPage, totalPages, currentData } = useTablePagination(parties, 20);
+
   return (
     <div>
       {/* Toolbar */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <form className="relative min-w-[16rem] flex-1 max-w-md">
+        <form 
+          className="relative min-w-[16rem] flex-1 max-w-md"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const q = fd.get("search") as string;
+            router.push(`?search=${encodeURIComponent(q)}`);
+          }}
+        >
           <Search
             className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60"
             aria-hidden
@@ -342,11 +356,12 @@ export function GuestsClient({
             {parties.length === 0 && (
               <TableEmpty message="No guests found. Add one to get started." />
             )}
-            {parties.map((party) => (
+            {currentData.map((party) => (
               <GuestRow key={party.id} party={party} />
             ))}
           </TableBody>
         </Table>
+        <TablePagination page={page} totalPages={totalPages} setPage={setPage} />
       </AdminTable>
 
       {/* Add Guest modal */}

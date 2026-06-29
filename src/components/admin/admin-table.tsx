@@ -112,3 +112,50 @@ export function TableEmpty({ message }: { message: string }) {
     </tr>
   );
 }
+
+/* ── Pagination ──────────────────────────────────── */
+export function useTablePagination<T>(data: T[], pageSize = 15) {
+  const [page, setPage] = React.useState(1);
+  React.useEffect(() => {
+    setPage(1); // Reset to first page when data changes
+  }, [data]);
+  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  const currentData = data.slice((page - 1) * pageSize, page * pageSize);
+  return { page, setPage, totalPages, currentData };
+}
+
+export function TablePagination({
+  page,
+  totalPages,
+  setPage,
+}: {
+  page: number;
+  totalPages: number;
+  setPage: (p: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between border-t border-blush/20 bg-paper-2/40 px-4 py-3 sm:px-6">
+      <p className="text-sm text-muted-ink">
+        Page <span className="font-medium text-ink">{page}</span> of{" "}
+        <span className="font-medium text-ink">{totalPages}</span>
+      </p>
+      <div className="flex gap-2">
+        <button
+          onClick={() => setPage(Math.max(1, page - 1))}
+          disabled={page === 1}
+          className="rounded-lg border border-blush/20 bg-paper px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-blush-light disabled:opacity-50 disabled:hover:bg-paper"
+        >
+          Previous
+        </button>
+        <button
+          onClick={() => setPage(Math.min(totalPages, page + 1))}
+          disabled={page === totalPages}
+          className="rounded-lg border border-blush/20 bg-paper px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-blush-light disabled:opacity-50 disabled:hover:bg-paper"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
