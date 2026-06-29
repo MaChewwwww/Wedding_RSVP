@@ -180,8 +180,8 @@ function TableCard({
       {/* Actions */}
       <div className="mt-auto flex items-center gap-1.5 border-t border-blush/15 px-4 py-3">
         <Button onClick={onManage} size="sm" variant="primary" className="flex-1">
-          <Settings2 className="h-4 w-4" />
-          Manage
+          <Settings2 className="mr-1.5 h-3.5 w-3.5" />
+          Assign Guests
         </Button>
         <Button
           onClick={onEdit}
