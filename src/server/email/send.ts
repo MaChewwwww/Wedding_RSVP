@@ -213,9 +213,12 @@ END:VCALENDAR`;
 
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
+      cache: "no-store",
       headers: {
         "api-key": apiKey,
         "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "Wedding-RSVP-App/1.0",
       },
       body: JSON.stringify({
         sender: { name: senderName, email: senderEmail },
@@ -253,7 +256,7 @@ END:VCALENDAR`;
       .eq("id", delivery.id);
     logger.error("email_send_failed", { 
       requestId: args.requestId,
-      error: err instanceof Error ? err.message : "unknown",
+      error: err instanceof Error ? (err.cause ? `${err.message} (${String(err.cause)})` : err.message) : "unknown",
     });
     return { ok: false, reason: "Email send failed." };
   }
