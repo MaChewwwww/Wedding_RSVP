@@ -179,7 +179,10 @@ export async function queuePassEmail(
   const icsStart = formatIcsDate(site.event.startTime);
   const icsEnd = formatIcsDate(site.event.endTime);
   const eventTitle = `Wedding of ${site.couple.displayName}`;
-  const eventDetails = `We can't wait to celebrate with you! View your wedding pass here: ${passUrl}`;
+  const eventDetails = `We can't wait to celebrate with you! 
+View your wedding pass here: ${passUrl}
+
+Venue Map: https://maps.app.goo.gl/nYcm1Bf5Ntk8dqP37`;
   
   const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${icsStart}/${icsEnd}&details=${encodeURIComponent(eventDetails)}&location=${encodeURIComponent(site.event.location)}`;
 
@@ -191,7 +194,7 @@ DTSTAMP:${formatIcsDate(new Date().toISOString())}
 DTSTART:${icsStart}
 DTEND:${icsEnd}
 SUMMARY:${eventTitle}
-DESCRIPTION:We can't wait to celebrate with you! View your wedding pass here: ${passUrl}
+DESCRIPTION:${eventDetails.replace(/\n/g, '\\n')}
 LOCATION:${site.event.location}
 URL:${passUrl}
 END:VEVENT
