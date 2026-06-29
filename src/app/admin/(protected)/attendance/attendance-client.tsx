@@ -15,11 +15,13 @@ import {
 } from "lucide-react";
 import { site } from "@/config/site";
 import { checkInAction, reverseCheckInAction } from "./actions";
+import { adminRsvpOverrideAction } from "@/app/admin/(protected)/guests/actions";
 import { useAdminAction } from "@/components/admin/use-admin-action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Modal } from "@/components/ui/modal";
 import {
   AdminTable,
@@ -72,6 +74,7 @@ export function AttendanceClient({
   const { pending, run } = useAdminAction();
   const [reverseTarget, setReverseTarget] = React.useState<Row | null>(null);
   const [viewTarget, setViewTarget] = React.useState<Row | null>(null);
+  const [updateRsvpTarget, setUpdateRsvpTarget] = React.useState<Row | null>(null);
 
   function checkIn(id: string) {
     run(
@@ -208,7 +211,7 @@ export function AttendanceClient({
                         <Undo2 className="h-3.5 w-3.5 md:mr-1.5" />
                         <span className="hidden md:inline">Reverse</span>
                       </Button>
-                    ) : (
+                    ) : row.rsvp_status === "attending" ? (
                       <Button
                         onClick={() => checkIn(row.id)}
                         disabled={pending}
@@ -218,6 +221,16 @@ export function AttendanceClient({
                       >
                         <Check className="h-3.5 w-3.5 md:mr-1.5" />
                         <span className="hidden md:inline">Check in</span>
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => setUpdateRsvpTarget(row)}
+                        disabled={pending}
+                        size="sm"
+                        variant="warning"
+                        className="h-8 shrink-0 px-2 md:h-9 md:px-3 whitespace-nowrap bg-butter-deep text-white hover:bg-butter-deep/90 border-transparent"
+                      >
+                        Update RSVP
                       </Button>
                     )}
                   </div>
@@ -278,7 +291,7 @@ export function AttendanceClient({
                   <Undo2 className="h-3.5 w-3.5 mr-1.5" />
                   Reverse check-in
                 </Button>
-              ) : (
+              ) : viewTarget.rsvp_status === "attending" ? (
                 <Button
                   onClick={() => {
                     setViewTarget(null);
@@ -289,6 +302,18 @@ export function AttendanceClient({
                 >
                   <Check className="h-3.5 w-3.5 mr-1.5" />
                   Check in
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    setViewTarget(null);
+                    setUpdateRsvpTarget(viewTarget);
+                  }}
+                  variant="warning"
+                  size="sm"
+                  className="bg-butter-deep text-white hover:bg-butter-deep/90 border-transparent"
+                >
+                  Update RSVP
                 </Button>
               )}
             </div>
@@ -337,6 +362,50 @@ export function AttendanceClient({
               </Button>
               <Button type="submit" variant="danger" size="sm" disabled={pending}>
                 {pending ? "Reversing…" : "Reverse check-in"}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* Update RSVP modal */}
+      <Modal
+        open={updateRsvpTarget !== null}
+        onClose={() => setUpdateRsvpTarget(null)}
+        title="Update RSVP Status"
+        description={`Manually update RSVP status for ${updateRsvpTarget?.full_name}.`}
+      >
+        {updateRsvpTarget && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              fd.set("inviteeId", updateRsvpTarget.id);
+              fd.set("reason", "Manual status update at door");
+              const newStatus = fd.get("status") as string;
+              run(() => adminRsvpOverrideAction(fd), {
+                loading: "Updating status…",
+                success: `Status updated`,
+                onSuccess: () => setUpdateRsvpTarget(null),
+              });
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-ink">Status</label>
+              <Select name="status" defaultValue={updateRsvpTarget.rsvp_status} className="w-full">
+                <option value="pending">Undecided</option>
+                <option value="attending">Attending</option>
+                <option value="declined">Not attending</option>
+              </Select>
+            </div>
+            
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="ghost" onClick={() => setUpdateRsvpTarget(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" disabled={pending}>
+                Save Changes
               </Button>
             </div>
           </form>

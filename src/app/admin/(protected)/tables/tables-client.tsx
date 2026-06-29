@@ -40,23 +40,27 @@ type Guest = {
   full_name: string;
   rsvp_status: string;
   table_id: string | null;
+  is_checked_in: boolean;
 };
 
-function statusColor(status: string) {
-  if (status === "attending") return "#5a9c56";
+function statusColor(status: string, isCheckedIn: boolean) {
+  if (status === "attending") {
+    return isCheckedIn ? "#5a9c56" : "#c8963c"; // Green if checked in, Yellow if not
+  }
   if (status === "declined") return "#d4516e";
   return "#c8963c";
 }
 
-/* Round-table seat visualization: filled + empty chairs around an arc. */
 function SeatRing({
   capacity,
   assigned,
+  colors,
 }: {
   capacity: number;
   assigned: number;
+  colors: string[];
 }) {
-  const seats = Array.from({ length: Math.min(capacity, 14) }, (_, i) => i < assigned);
+  const seats = Array.from({ length: Math.min(capacity, 14) }, (_, i) => colors[i] || null);
   const radius = 46;
   const cx = 60;
   const cy = 60;
@@ -74,7 +78,7 @@ function SeatRing({
       >
         {assigned}/{capacity}
       </text>
-      {seats.map((filled, i) => {
+      {seats.map((seatColor, i) => {
         const angle = (i / seats.length) * 2 * Math.PI - Math.PI / 2;
         const x = cx + radius * Math.cos(angle);
         const y = cy + radius * Math.sin(angle);
@@ -84,8 +88,8 @@ function SeatRing({
             cx={x}
             cy={y}
             r={6}
-            fill={filled ? "#5a9c56" : "#fde8f0"}
-            stroke={filled ? "#5a9c56" : "#f0a8bc"}
+            fill={seatColor ? seatColor : "#fde8f0"}
+            stroke={seatColor ? seatColor : "#f0a8bc"}
             strokeWidth={1.5}
           />
         );
@@ -142,7 +146,7 @@ function TableCard({
       {/* Body: seat ring + guest preview */}
       <div className="flex gap-4 px-5 py-4">
         <div className="shrink-0">
-          <SeatRing capacity={table.capacity} assigned={table.assigned} />
+          <SeatRing capacity={table.capacity} assigned={table.assigned} colors={guests.map((g) => statusColor(g.rsvp_status, g.is_checked_in))} />
         </div>
         <div className="min-w-0 flex-1">
           {guests.length === 0 ? (
@@ -158,7 +162,7 @@ function TableCard({
                 >
                   <span
                     className="h-1.5 w-1.5 shrink-0 rounded-full"
-                    style={{ background: statusColor(g.rsvp_status) }}
+                    style={{ background: statusColor(g.rsvp_status, g.is_checked_in) }}
                   />
                   <span className="truncate">{g.full_name}</span>
                 </li>
@@ -386,7 +390,7 @@ export function TablesClient({
                       <span className="flex items-center gap-2 text-sm text-ink">
                         <span
                           className="h-1.5 w-1.5 rounded-full"
-                          style={{ background: statusColor(g.rsvp_status) }}
+                          style={{ background: statusColor(g.rsvp_status, g.is_checked_in) }}
                         />
                         {g.full_name}
                       </span>

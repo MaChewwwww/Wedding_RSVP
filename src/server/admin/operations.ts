@@ -91,7 +91,7 @@ export async function loadTableAdminData() {
       .order("name", { ascending: true }),
     db
       .from("invitees")
-      .select("id, full_name, rsvp_status, table_id")
+      .select("id, full_name, rsvp_status, table_id, invitee_attendance_current(is_checked_in)")
       .eq("is_active", true)
       .order("full_name", { ascending: true }),
   ]);
@@ -107,7 +107,14 @@ export async function loadTableAdminData() {
     ...t,
     location_note: locationById.get(t.table_id) ?? null,
   }));
-  return { tables: tablesWithLocation, guests: guests.data ?? [] };
+  const guestsMapped = (guests.data ?? []).map((g: any) => ({
+    id: g.id,
+    full_name: g.full_name,
+    rsvp_status: g.rsvp_status,
+    table_id: g.table_id,
+    is_checked_in: g.invitee_attendance_current?.is_checked_in ?? false,
+  }));
+  return { tables: tablesWithLocation, guests: guestsMapped };
 }
 
 export async function loadAttendanceRoster(search?: string) {
