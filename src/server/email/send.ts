@@ -248,7 +248,10 @@ END:VCALENDAR`;
         error_code: err instanceof Error ? err.message.slice(0, 120) : "unknown",
       })
       .eq("id", delivery.id);
-    logger.error("email_send_failed", { requestId: args.requestId });
+    logger.error("email_send_failed", { 
+      requestId: args.requestId,
+      error: err instanceof Error ? err.message : "unknown",
+    });
     return { ok: false, reason: "Email send failed." };
   }
 }
