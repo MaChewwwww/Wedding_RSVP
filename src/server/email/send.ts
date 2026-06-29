@@ -1,5 +1,5 @@
 import "server-only";
-import { Resend } from "resend";
+import { render } from "@react-email/render";
 import { createHash } from "node:crypto";
 import { serverEnv, env } from "@/config/env";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -44,8 +44,8 @@ export async function queuePassEmail(
   if (!cfg.ENABLE_EMAIL_DELIVERY) {
     return { ok: false, reason: "Email delivery is disabled." };
   }
-  const apiKey = cfg.RESEND_API_KEY;
-  const from = cfg.RESEND_FROM_EMAIL;
+  const apiKey = cfg.BREVO_API_KEY;
+  const from = cfg.BREVO_FROM_EMAIL;
   const db = createAdminClient();
   if (!apiKey || !from || !db) {
     return { ok: false, reason: "Email backend not configured." };
@@ -157,21 +157,50 @@ export async function queuePassEmail(
   }
 
   const passUrl = `${env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}/pass`;
-  const resend = new Resend(apiKey);
+  
+  let senderName = "Wedding RSVP";
+  let senderEmail = from;
+  const fromMatch = from.match(/^(.*)<(.+)>$/);
+  if (fromMatch) {
+    senderName = fromMatch[1].trim();
+    senderEmail = fromMatch[2].trim();
+  }
+
+  const brevoAttachments = attachments.map((a) => ({
+    name: a.filename,
+    content: a.content.toString("base64"),
+  }));
 
   try {
-    const { data: sent, error } = await resend.emails.send({
-      from,
-      to: args.email,
-      subject: "Your wedding pass",
-      react: PassEmail({ partyName, passUrl, passes: passesWithUrls }),
-      attachments: attachments.length > 0 ? attachments : undefined,
+    const htmlContent = await render(
+      PassEmail({ partyName, passUrl, passes: passesWithUrls }),
+    );
+
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: args.email }],
+        subject: "Your wedding pass",
+        htmlContent,
+        attachment: brevoAttachments.length > 0 ? brevoAttachments : undefined,
+      }),
     });
-    if (error) throw new Error(error.message);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Brevo API error: ${res.status} ${errorText}`);
+    }
+
+    const sent = await res.json();
 
     await db
       .from("email_deliveries")
-      .update({ status: "sent", provider_message_id: sent?.id ?? null })
+      .update({ status: "sent", provider_message_id: sent?.messageId ?? null })
       .eq("id", delivery.id);
 
     logger.info("email_sent", {

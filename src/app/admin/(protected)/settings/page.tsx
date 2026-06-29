@@ -14,8 +14,8 @@ export default function SettingsPage() {
     ["Guest session secret",    Boolean(server.GUEST_SESSION_SECRET)],
     ["QR token pepper",         Boolean(server.QR_TOKEN_PEPPER)],
     ["QR encryption key",       Boolean(server.QR_TOKEN_ENCRYPTION_KEY)],
-    ["Resend API",              Boolean(server.RESEND_API_KEY && server.RESEND_FROM_EMAIL)],
-    ["Resend webhook",          Boolean(server.RESEND_WEBHOOK_SECRET)],
+    ["Brevo API",              Boolean(server.BREVO_API_KEY && server.BREVO_FROM_EMAIL)],
+    ["Brevo webhook",          Boolean(server.BREVO_WEBHOOK_SECRET)],
   ] as const;
 
   const weddingConfig = [
