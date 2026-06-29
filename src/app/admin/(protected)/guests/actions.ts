@@ -286,6 +286,7 @@ export async function adminRsvpOverrideAction(
     .object({
       inviteeId: z.string().uuid(),
       status: z.enum(["pending", "attending", "declined"]),
+      fullName: z.string().trim().min(2).max(120).optional(),
       email: z.string().trim().email().optional().or(z.literal("")),
       reason: z.string().trim().min(3).max(300),
       sendEmail: z.enum(["true", "false"]).optional(),
@@ -293,6 +294,7 @@ export async function adminRsvpOverrideAction(
     .parse({
       inviteeId: formData.get("inviteeId"),
       status: formData.get("status"),
+      fullName: formData.get("fullName") || undefined,
       email: formData.get("email"),
       reason: formData.get("reason"),
       sendEmail: formData.get("sendEmail") === "true" ? "true" : "false",
@@ -311,6 +313,7 @@ export async function adminRsvpOverrideAction(
     .update({
       rsvp_status: parsed.status,
       table_id: parsed.status === "declined" ? null : undefined,
+      ...(parsed.fullName ? { full_name: parsed.fullName, normalized_name: normalizeName(parsed.fullName) } : {}),
     })
     .eq("id", parsed.inviteeId);
 
@@ -320,6 +323,7 @@ export async function adminRsvpOverrideAction(
       rsvp_status: parsed.status,
       email: parsed.email || null,
       responded_at: new Date().toISOString(),
+      ...(parsed.fullName ? { display_name: parsed.fullName } : {}),
     })
     .eq("id", invitee.party_id);
 

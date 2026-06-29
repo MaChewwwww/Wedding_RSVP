@@ -13,6 +13,8 @@ import {
   Mail,
   Users,
   Edit,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import {
   adminRsvpOverrideAction,
@@ -81,6 +83,7 @@ function GuestRow({ party }: { party: Party }) {
   const { pending, run } = useAdminAction();
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [updateOpen, setUpdateOpen] = React.useState(false);
+  const [nameLocked, setNameLocked] = React.useState(true);
 
   if (!guest) return null;
 
@@ -230,6 +233,31 @@ function GuestRow({ party }: { party: Party }) {
           </div>
 
           <div className="space-y-2">
+            <label className="block text-sm font-medium text-ink">Guest Name</label>
+            <div className="flex gap-2">
+              <Input
+                name="fullName"
+                type="text"
+                defaultValue={guest.full_name}
+                disabled={nameLocked}
+                className="w-full"
+                required
+                minLength={2}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setNameLocked(!nameLocked)}
+                className="shrink-0 text-muted-ink"
+                title={nameLocked ? "Unlock to edit" : "Lock"}
+              >
+                {nameLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <label className="block text-sm font-medium text-ink">Email</label>
             <Input
               name="email"
@@ -300,7 +328,7 @@ export function GuestsClient({
         >
           <div className="relative flex-1">
             <Search
-              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60"
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60 z-10"
               aria-hidden
             />
             <Input

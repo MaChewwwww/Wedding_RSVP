@@ -13,6 +13,8 @@ import {
   AlertCircle,
   Eye,
   XCircle,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { site } from "@/config/site";
 import { checkInAction, reverseCheckInAction } from "./actions";
@@ -79,6 +81,7 @@ export function AttendanceClient({
   const [reverseTarget, setReverseTarget] = React.useState<Row | null>(null);
   const [viewTarget, setViewTarget] = React.useState<Row | null>(null);
   const [updateRsvpTarget, setUpdateRsvpTarget] = React.useState<Row | null>(null);
+  const [nameLocked, setNameLocked] = React.useState(true);
 
   const { page, setPage, totalPages, currentData } = useTablePagination(rows, 20);
 
@@ -154,7 +157,7 @@ export function AttendanceClient({
       >
         <div className="relative flex-1">
           <Search
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60"
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60 z-10"
             aria-hidden
           />
           <Input
@@ -238,7 +241,10 @@ export function AttendanceClient({
                       </Button>
                     ) : (
                       <Button
-                        onClick={() => setUpdateRsvpTarget(row)}
+                        onClick={() => {
+                          setUpdateRsvpTarget(row);
+                          setNameLocked(true);
+                        }}
                         disabled={pending}
                         size="sm"
                         variant="secondary"
@@ -323,6 +329,7 @@ export function AttendanceClient({
                   onClick={() => {
                     setViewTarget(null);
                     setUpdateRsvpTarget(viewTarget);
+                    setNameLocked(true);
                   }}
                   variant="secondary"
                   size="sm"
@@ -413,6 +420,31 @@ export function AttendanceClient({
                 <option value="attending">Attending</option>
                 <option value="declined">Not attending</option>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-ink">Guest Name</label>
+              <div className="flex gap-2">
+                <Input
+                  name="fullName"
+                  type="text"
+                  defaultValue={updateRsvpTarget.full_name}
+                  disabled={nameLocked}
+                  className="w-full"
+                  required
+                  minLength={2}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setNameLocked(!nameLocked)}
+                  className="shrink-0 text-muted-ink"
+                  title={nameLocked ? "Unlock to edit" : "Lock"}
+                >
+                  {nameLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
             
             <div className="flex justify-end gap-3 pt-4">

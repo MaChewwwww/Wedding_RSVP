@@ -11,6 +11,7 @@ import {
   UserPlus,
   X,
   Armchair,
+  Search,
 } from "lucide-react";
 import {
   assignTableAction,
@@ -210,23 +211,69 @@ function TableCard({
 
 function GuestSearchCombobox({ guests }: { guests: Guest[] }) {
   const [search, setSearch] = React.useState("");
+  const [open, setOpen] = React.useState(false);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+
+  // Close when clicking outside
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = guests.filter((g) =>
+    g.full_name.toLowerCase().includes(search.toLowerCase())
+  );
+  
+  // To avoid submitting a non-existent guest, require a perfect match for the hidden input
   const selected = guests.find((g) => g.full_name === search);
+
   return (
-    <div className="flex-1 relative">
+    <div className="flex-1 relative" ref={wrapperRef}>
+      <Search
+        className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60 z-10"
+        aria-hidden
+      />
       <input type="hidden" name="inviteeId" value={selected?.id ?? ""} />
       <Input
-        list="unseated-guests"
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Type or select a guest…"
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        placeholder="Search for a guest to assign…"
         required
-        className="w-full"
+        autoComplete="off"
+        className="w-full pl-10 bg-white"
       />
-      <datalist id="unseated-guests">
-        {guests.map((g) => (
-          <option key={g.id} value={g.full_name} />
-        ))}
-      </datalist>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 w-full max-h-60 overflow-y-auto bg-white rounded-lg border border-blush/30 shadow-xl z-50 py-1">
+          {filtered.length === 0 ? (
+            <div className="px-4 py-3 text-sm text-muted-ink text-center">
+              No guests found.
+            </div>
+          ) : (
+            filtered.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                className="w-full text-left px-4 py-2 text-sm text-ink hover:bg-blush-light transition-colors"
+                onClick={() => {
+                  setSearch(g.full_name);
+                  setOpen(false);
+                }}
+              >
+                {g.full_name}
+              </button>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
