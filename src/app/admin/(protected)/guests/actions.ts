@@ -286,12 +286,14 @@ export async function adminRsvpOverrideAction(
     .object({
       inviteeId: z.string().uuid(),
       status: z.enum(["pending", "attending", "declined"]),
+      email: z.string().trim().email().optional().or(z.literal("")),
       reason: z.string().trim().min(3).max(300),
       sendEmail: z.enum(["true", "false"]).optional(),
     })
     .parse({
       inviteeId: formData.get("inviteeId"),
       status: formData.get("status"),
+      email: formData.get("email"),
       reason: formData.get("reason"),
       sendEmail: formData.get("sendEmail") === "true" ? "true" : "false",
     });
@@ -316,6 +318,7 @@ export async function adminRsvpOverrideAction(
     .from("invitation_parties")
     .update({
       rsvp_status: parsed.status,
+      email: parsed.email || null,
       responded_at: new Date().toISOString(),
     })
     .eq("id", invitee.party_id);

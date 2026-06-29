@@ -225,6 +225,17 @@ function GuestRow({ party }: { party: Party }) {
               ))}
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-ink">Email</label>
+            <Input
+              name="email"
+              type="email"
+              defaultValue={party.email || ""}
+              placeholder="e.g. guest@example.com (optional)"
+              className="w-full"
+            />
+          </div>
           
           <div className="flex items-center gap-2">
             <input
