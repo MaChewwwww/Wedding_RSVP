@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useRef, useState } from "react";
+import { startTransition, useActionState, useRef, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import {
   checkInAction,
@@ -60,7 +60,6 @@ export function QrScanner() {
   }
 
   // Effect to handle state changes from resolveScanAction
-  import { useEffect } from "react"; // Added to scope since we need it
   useEffect(() => {
     if (state.status === "found") {
       if (!state.subject.isCheckedIn) {
@@ -230,8 +229,6 @@ export function QrScanner() {
         />
       </div>
 
-        />
-      </div>
 
       {/* Auto-closing Result Modal */}
       <Modal
