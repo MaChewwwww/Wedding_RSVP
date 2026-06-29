@@ -227,7 +227,7 @@ export function AttendanceClient({
                         onClick={() => setUpdateRsvpTarget(row)}
                         disabled={pending}
                         size="sm"
-                        variant="warning"
+                        variant="secondary"
                         className="h-8 shrink-0 px-2 md:h-9 md:px-3 whitespace-nowrap bg-butter-deep text-white hover:bg-butter-deep/90 border-transparent"
                       >
                         Update RSVP
@@ -309,7 +309,7 @@ export function AttendanceClient({
                     setViewTarget(null);
                     setUpdateRsvpTarget(viewTarget);
                   }}
-                  variant="warning"
+                  variant="secondary"
                   size="sm"
                   className="bg-butter-deep text-white hover:bg-butter-deep/90 border-transparent"
                 >
