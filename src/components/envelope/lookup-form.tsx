@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
+import { Download } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   confirmInvitationAction,
@@ -166,9 +167,10 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
                 <a
                   href={passes[0].qrDataUrl}
                   download={`wedding-pass-${party?.guest.fullName.replace(/\s+/g, "-").toLowerCase()}.png`}
-                  className="mt-2 w-full h-10 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-sm font-semibold tracking-[0.1em] text-[10px] uppercase transition-all duration-200 flex items-center justify-center"
+                  className="mt-2 w-10 h-10 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-sm transition-all duration-200 flex items-center justify-center mx-auto"
+                  title="Download QR Pass"
                 >
-                  Download QR Pass
+                  <Download className="w-4 h-4" />
                 </a>
               )}
             </div>
@@ -180,12 +182,36 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.3 }}
         >
-          <Button
-            onClick={() => router.push("/celebration")}
-            className="w-full h-12 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-950/20 hover:shadow-lg hover:shadow-rose-950/30 font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200"
-          >
-            Continue to Wedding Details
-          </Button>
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={() => router.push("/celebration")}
+              className="w-full h-12 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-950/20 hover:shadow-lg hover:shadow-rose-950/30 font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200"
+            >
+              Continue to Wedding Details
+            </Button>
+            
+            {(() => {
+              const formatIcsDate = (isoString: string) => {
+                return new Date(isoString).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+              };
+              const icsStart = formatIcsDate(site.event.startTime);
+              const icsEnd = formatIcsDate(site.event.endTime);
+              const eventTitle = `Wedding of ${site.couple.displayName}`;
+              const eventDetails = `We can't wait to celebrate with you!\n\nVenue Map: https://maps.app.goo.gl/nYcm1Bf5Ntk8dqP37`;
+              const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${icsStart}/${icsEnd}&details=${encodeURIComponent(eventDetails)}&location=${encodeURIComponent(site.event.location)}`;
+              
+              return (
+                <a
+                  href={googleCalendarUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-12 rounded-full border-2 border-rose-400 text-rose-500 hover:bg-rose-50 hover:border-rose-500 hover:text-rose-600 shadow-sm font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200 flex items-center justify-center"
+                >
+                  Add to Google Calendar
+                </a>
+              );
+            })()}
+          </div>
         </motion.div>
       </div>
     );
