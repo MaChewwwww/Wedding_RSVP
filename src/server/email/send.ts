@@ -159,7 +159,7 @@ export async function queuePassEmail(
 
   const passUrl = `${env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}/pass`;
   
-  let senderName = site.couple.displayName;
+  let senderName: string = site.couple.displayName;
   let senderEmail = from;
   const fromMatch = from.match(/^(.*)<(.+)>$/);
   if (fromMatch) {
@@ -172,9 +172,40 @@ export async function queuePassEmail(
     content: a.content.toString("base64"),
   }));
 
+  // --- Calendar Integration ---
+  const formatIcsDate = (isoString: string) => {
+    return new Date(isoString).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  };
+  const icsStart = formatIcsDate(site.event.startTime);
+  const icsEnd = formatIcsDate(site.event.endTime);
+  const eventTitle = `Wedding of ${site.couple.displayName}`;
+  const eventDetails = `We can't wait to celebrate with you! View your wedding pass here: ${passUrl}`;
+  
+  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${icsStart}/${icsEnd}&details=${encodeURIComponent(eventDetails)}&location=${encodeURIComponent(site.event.location)}`;
+
+  const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Wedding RSVP//EN
+BEGIN:VEVENT
+DTSTAMP:${formatIcsDate(new Date().toISOString())}
+DTSTART:${icsStart}
+DTEND:${icsEnd}
+SUMMARY:${eventTitle}
+DESCRIPTION:We can't wait to celebrate with you! View your wedding pass here: ${passUrl}
+LOCATION:${site.event.location}
+URL:${passUrl}
+END:VEVENT
+END:VCALENDAR`;
+
+  brevoAttachments.push({
+    name: "invite.ics",
+    content: Buffer.from(icsContent).toString("base64"),
+  });
+  // ----------------------------
+
   try {
     const htmlContent = await render(
-      PassEmail({ partyName, passUrl, passes: passesWithUrls }),
+      PassEmail({ partyName, passUrl, googleCalendarUrl, passes: passesWithUrls }),
     );
 
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {

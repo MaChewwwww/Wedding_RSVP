@@ -20,6 +20,9 @@ export const site = {
   event: {
     // PLACEHOLDER — confirm final wedding date/time (open-questions P0 #1).
     weddingDate: "2026-08-15",
+    startTime: "2026-08-15T15:00:00+08:00",
+    endTime: "2026-08-15T22:00:00+08:00",
+    location: "The Grand Venue, Manila, Philippines",
     timezone: "Asia/Manila",
     // Display-only mirror of the server RSVP_DEADLINE; the server value is
     // authoritative for any mutation decision.

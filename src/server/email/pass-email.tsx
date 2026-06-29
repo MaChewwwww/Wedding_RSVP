@@ -22,10 +22,11 @@ import { site } from "@/config/site";
 export type PassEmailProps = {
   partyName: string;
   passUrl: string;
+  googleCalendarUrl: string;
   passes?: { id: string; label: string; qrDataUrl: string; publicUrl?: string }[];
 };
 
-export function PassEmail({ partyName, passUrl, passes }: PassEmailProps) {
+export function PassEmail({ partyName, passUrl, googleCalendarUrl, passes }: PassEmailProps) {
   return (
     <Html lang="en">
       <Head>
@@ -267,6 +268,27 @@ export function PassEmail({ partyName, passUrl, passes }: PassEmailProps) {
               >
                 View My Wedding Pass
               </Link>
+              <div style={{ marginTop: "12px" }}>
+                <Link
+                  href={googleCalendarUrl}
+                  style={{
+                    display: "inline-block",
+                    backgroundColor: "#ffffff",
+                    color: "#d4516e",
+                    border: "2px solid #d4516e",
+                    padding: "12px 30px",
+                    borderRadius: "50px",
+                    textDecoration: "none",
+                    fontFamily: "Arial, Helvetica, sans-serif",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    letterSpacing: "1px",
+                    textTransform: "uppercase" as const,
+                  }}
+                >
+                  Add to Google Calendar
+                </Link>
+              </div>
             </Section>
           </Section>
 
