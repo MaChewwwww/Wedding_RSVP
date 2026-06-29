@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { serverEnv, env } from "@/config/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
+import { site } from "@/config/site";
 import { PassEmail } from "./pass-email";
 
 /*
@@ -158,11 +159,11 @@ export async function queuePassEmail(
 
   const passUrl = `${env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}/pass`;
   
-  let senderName = "Wedding RSVP";
+  let senderName = site.couple.displayName;
   let senderEmail = from;
   const fromMatch = from.match(/^(.*)<(.+)>$/);
   if (fromMatch) {
-    senderName = fromMatch[1].trim();
+    senderName = fromMatch[1].trim() || site.couple.displayName;
     senderEmail = fromMatch[2].trim();
   }
 
@@ -185,7 +186,7 @@ export async function queuePassEmail(
       body: JSON.stringify({
         sender: { name: senderName, email: senderEmail },
         to: [{ email: args.email }],
-        subject: "Your wedding pass",
+        subject: "Your Wedding Pass",
         htmlContent,
         attachment: brevoAttachments.length > 0 ? brevoAttachments : undefined,
       }),
