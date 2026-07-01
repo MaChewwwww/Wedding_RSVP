@@ -10,6 +10,7 @@ export function GlobalAudio() {
 
   React.useEffect(() => {
     const audio = new Audio("/assets/wildflowers.mp3");
+    audio.autoplay = true;
     audio.loop = true;
     audio.volume = 0.4;
     audioRef.current = audio;
