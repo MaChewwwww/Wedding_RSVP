@@ -9,21 +9,12 @@ export function GlobalAudio() {
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   React.useEffect(() => {
-    // Create the audio element dynamically on the client
     const audio = new Audio("/assets/wildflowers.mp3");
     audio.loop = true;
     audio.volume = 0.4;
     audioRef.current = audio;
 
     const savedState = typeof window !== 'undefined' ? localStorage.getItem("wedding-audio-state") : null;
-    
-    // If the user explicitly muted, respect it and don't try to autoplay
-    if (savedState === "muted") {
-      return () => {
-        audio.pause();
-        audio.src = "";
-      };
-    }
 
     const tryPlay = () => {
       if (audioRef.current && audioRef.current.paused) {
@@ -39,13 +30,13 @@ export function GlobalAudio() {
       }
     };
 
-    // Attempt to play immediately (often blocked by modern browsers)
-    tryPlay();
-
-    // Attach listeners for the first user interaction to start the music
-    window.addEventListener("click", tryPlay);
-    window.addEventListener("touchstart", tryPlay);
-    window.addEventListener("scroll", tryPlay, { passive: true });
+    // If the user explicitly muted, respect it and do NOT attach autoplay listeners
+    if (savedState !== "muted") {
+      tryPlay();
+      window.addEventListener("click", tryPlay);
+      window.addEventListener("touchstart", tryPlay);
+      window.addEventListener("scroll", tryPlay, { passive: true });
+    }
 
     return () => {
       audio.pause();
@@ -63,9 +54,12 @@ export function GlobalAudio() {
       setIsPlaying(false);
       localStorage.setItem("wedding-audio-state", "muted");
     } else {
-      audioRef.current.play().then(() => {
-        setIsPlaying(true);
-        localStorage.setItem("wedding-audio-state", "playing");
+      setIsPlaying(true);
+      localStorage.setItem("wedding-audio-state", "playing");
+      audioRef.current.play().catch((err) => {
+        console.warn("Play failed", err);
+        setIsPlaying(false);
+        localStorage.setItem("wedding-audio-state", "muted");
       });
     }
   };
