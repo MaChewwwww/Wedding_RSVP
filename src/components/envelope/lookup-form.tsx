@@ -114,7 +114,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
 
   // Screen 4: Success / Pass Panel
   if (stage === "success") {
-    const isAttending = party?.guest.rsvpStatus === "attending" || passes.length > 0;
+    const isAttending = attendanceState === "attending" || passes.length > 0;
 
     const handleDownloadQR = async (e: React.MouseEvent) => {
       e.preventDefault();

@@ -327,6 +327,14 @@ export async function adminRsvpOverrideAction(
     })
     .eq("id", invitee.party_id);
 
+  if (parsed.status !== "attending") {
+    await db
+      .from("qr_passes")
+      .update({ status: "revoked", revoked_at: new Date().toISOString() })
+      .eq("invitee_id", parsed.inviteeId)
+      .eq("status", "active");
+  }
+
   if (parsed.status === "attending" && parsed.sendEmail === "true") {
     const { data: existingPass } = await db
       .from("qr_passes")
