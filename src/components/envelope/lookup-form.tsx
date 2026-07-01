@@ -117,27 +117,34 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
     const isAttending = party?.guest.rsvpStatus === "attending" || passes.length > 0;
 
     return (
-      <div className="w-full space-y-3 text-center">
+      <div className="w-full space-y-2 text-center">
         <motion.div
-          className="mx-auto w-10 h-10 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 120, damping: 10 }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
-        </motion.div>
-
-        <motion.div
-          className="space-y-0.5"
+          className="flex items-center justify-center gap-1.5"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
         >
-          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-rose-600/90">
+          <motion.div
+            className="w-5 h-5 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 shrink-0"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 120, damping: 10, delay: 0.1 }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          </motion.div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-rose-600/90 pt-0.5">
             RSVP Confirmed
           </p>
+        </motion.div>
+
+        <motion.div
+          className="space-y-1"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.05 }}
+        >
           <h3 className="font-display text-xl font-bold text-ink leading-tight">
             Thank you, {party?.guest.fullName}!
           </h3>
