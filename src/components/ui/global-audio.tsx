@@ -15,11 +15,21 @@ export function GlobalAudio() {
     audio.volume = 0.4;
     audioRef.current = audio;
 
+    const savedState = typeof window !== 'undefined' ? localStorage.getItem("wedding-audio-state") : null;
+    
+    // If the user explicitly muted, respect it and don't try to autoplay
+    if (savedState === "muted") {
+      return () => {
+        audio.pause();
+        audio.src = "";
+      };
+    }
+
     const tryPlay = () => {
-      if (audioRef.current && !isPlaying) {
+      if (audioRef.current && audioRef.current.paused) {
         audioRef.current.play().then(() => {
           setIsPlaying(true);
-          // Remove listeners once successfully started
+          localStorage.setItem("wedding-audio-state", "playing");
           window.removeEventListener("click", tryPlay);
           window.removeEventListener("touchstart", tryPlay);
           window.removeEventListener("scroll", tryPlay);
@@ -51,9 +61,11 @@ export function GlobalAudio() {
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
+      localStorage.setItem("wedding-audio-state", "muted");
     } else {
       audioRef.current.play().then(() => {
         setIsPlaying(true);
+        localStorage.setItem("wedding-audio-state", "playing");
       });
     }
   };
