@@ -898,11 +898,11 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
         <div className="absolute bottom-6 right-6 z-30 select-none">
           <Link
             href="/celebration"
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full glass-card hover:bg-white/80 transition-all duration-200 text-rose-800 hover:text-rose-600 font-semibold tracking-wider text-[10px] uppercase shadow-sm group hover:-translate-y-0.5"
+            className="flex items-center gap-2 px-6 py-3 rounded-full glass-card hover:bg-white/80 transition-all duration-200 text-rose-800 hover:text-rose-600 font-semibold tracking-wider text-xs uppercase shadow-sm group hover:-translate-y-0.5"
           >
             <span>Wedding Details</span>
             <svg
-              className="w-3.5 h-3.5 transform transition-transform group-hover:translate-x-1"
+              className="w-4 h-4 transform transition-transform group-hover:translate-x-1"
               fill="none"
               stroke="currentColor"
               strokeWidth="2.5"
