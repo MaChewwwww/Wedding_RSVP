@@ -89,9 +89,27 @@ export function FaqSection() {
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                     className="overflow-hidden"
                   >
-                    <p className="px-5 pb-5 text-sm leading-relaxed text-muted-ink">
-                      {item.answer}
-                    </p>
+                    <div className="px-5 pb-5">
+                      <p className="text-sm leading-relaxed text-muted-ink">
+                        {item.answer}
+                      </p>
+                      {item.swatches && item.swatches.length > 0 && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2.5">
+                          {item.swatches.map((color) => (
+                            <span
+                              key={color}
+                              title={color}
+                              className="h-8 w-8 rounded-full shadow-sm"
+                              style={{
+                                background: color,
+                                border: "2px solid rgba(255,255,255,0.85)",
+                                boxShadow: "0 2px 6px rgba(80,60,60,0.15)",
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>

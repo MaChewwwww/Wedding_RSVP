@@ -1,19 +1,18 @@
 /*
   Venue configuration (docs/configuration.md "Venue configuration").
   Use explicit, approved Google Maps URLs — never construct URLs from
-  untrusted text. All entries below are PLACEHOLDER until venue details are
-  confirmed (open-questions P0 #11).
+  untrusted text.
 */
 
-export type VenueType = "preparation" | "ceremony" | "reception";
+export type VenueType = "ceremony" | "reception";
 
 export type Venue = {
   type: VenueType;
   name: string;
   address: string;
   date: string;
-  startTime: string;
-  endTime: string;
+  /** Human-facing time label, e.g. "3:00 PM++". */
+  timeLabel: string;
   description: string;
   arrivalNotes?: string;
   parkingNotes?: string;
@@ -25,42 +24,29 @@ export type Venue = {
 
 export const venues: Venue[] = [
   {
-    type: "preparation",
-    name: "Preparation Venue",
-    address: "To be confirmed",
-    date: "2026-08-15",
-    startTime: "08:00",
-    endTime: "12:00",
-    description:
-      "Where the couple and entourage prepare before the ceremony. Details to follow.",
-    googleMapsUrl: "https://maps.google.com/",
-    image: "/assets/prep_venue.png",
-    isPlaceholder: true,
-  },
-  {
     type: "ceremony",
-    name: "Wedding Venue",
-    address: "To be confirmed",
-    date: "2026-08-15",
-    startTime: "14:00",
-    endTime: "15:30",
+    name: "Iglesia Ni Cristo Locale of Metro Manila Hills",
+    address: "Q45J+F4C, San Jose, Rodriguez, Rizal",
+    date: "2026-07-21",
+    timeLabel: "3:00 PM++",
     description:
-      "The ceremony where Jobert and April exchange their vows. Details to follow.",
-    googleMapsUrl: "https://maps.google.com/",
-    image: "/assets/wed_venue.png",
-    isPlaceholder: true,
+      "The ceremony where Jobert and April exchange their vows.",
+    googleMapsUrl:
+      "https://www.google.com/maps/search/?api=1&query=Q45J%2BF4C%20San%20Jose%20Rodriguez%20Rizal",
+    image: "/assets/wedding_venue.jpg",
+    isPlaceholder: false,
   },
   {
     type: "reception",
-    name: "Reception Venue",
-    address: "To be confirmed",
-    date: "2026-08-15",
-    startTime: "17:00",
-    endTime: "22:00",
+    name: "Costa Abril Resort",
+    address: "49 Dao St, Rodriguez, Rizal, Philippines",
+    date: "2026-07-21",
+    timeLabel: "7:00 PM++",
     description:
-      "Dinner, dancing, and celebration to follow the ceremony. Details to follow.",
-    googleMapsUrl: "https://maps.google.com/",
-    image: "/assets/rec_venue.png",
-    isPlaceholder: true,
+      "Dinner, dancing, and celebration to follow the ceremony.",
+    googleMapsUrl:
+      "https://www.google.com/maps/search/?api=1&query=Costa%20Abril%20Resort%2049%20Dao%20St%20Rodriguez%20Rizal",
+    image: "/assets/reception_venue.jpg",
+    isPlaceholder: false,
   },
 ];

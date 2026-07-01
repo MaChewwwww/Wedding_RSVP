@@ -6,13 +6,16 @@
 export type FaqItem = {
   question: string;
   answer: string;
+  /** Optional pastel color swatches shown as circular samples under the answer. */
+  swatches?: string[];
 };
 
 export const faq: FaqItem[] = [
   {
     question: "What should I wear?",
     answer:
-      "We'd love for you to dress in semi-formal attire. A more specific dress code will be confirmed closer to the date.",
+      "We'd love for you to dress in semi-formal attire in soft pastel tones. Here are a few colors to inspire your outfit:",
+    swatches: ["#f0a8bc", "#8fbc8b", "#90bfd8", "#b5a0d5", "#f0c84a", "#c47b56"],
   },
   {
     question: "Can I bring a plus-one?",
@@ -31,17 +34,11 @@ export const faq: FaqItem[] = [
   },
   {
     question: "Is parking available?",
-    answer: "Parking details will be confirmed once the venue is finalized.",
-  },
-  {
-    question: "Are the ceremony and reception in the same place?",
-    answer:
-      "Venue details, including travel between locations, will be listed in the Places section above.",
+    answer: "Parking is available in both wedding and reception.",
   },
   {
     question: "Who should I contact if my plans change?",
-    answer:
-      "Please reach out to our wedding coordinator using the contact details in the footer.",
+    answer: "Please reach out the bride and groom.",
   },
   {
     question: "Can I update my RSVP?",

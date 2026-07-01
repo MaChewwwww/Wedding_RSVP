@@ -5,12 +5,13 @@ import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  confirmInvitationAction,
-  lookupAction,
+  searchInvitationsAction,
+  selectInvitationAction,
   getPartyAction,
   loadPassesAction,
-  type ConfirmInvitationState,
-  type LookupActionState,
+  type SearchActionState,
+  type SelectInvitationState,
+  type SearchCandidateView,
 } from "@/app/(guest)/actions";
 import {
   submitRsvpAction,
@@ -25,8 +26,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { site } from "@/config/site";
 import { useEnvelope } from "@/components/envelope/envelope-gate";
 
-const initialLookup: LookupActionState = { status: "idle" };
-const initialConfirmation: ConfirmInvitationState = { status: "idle" };
+const initialSearch: SearchActionState = { status: "idle" };
+const initialSelect: SelectInvitationState = { status: "idle" };
 const initialRsvp: RsvpActionState = { status: "idle" };
 
 const CHOICES = [
@@ -39,8 +40,10 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
   const router = useRouter();
   const env = useEnvelope();
 
-  const [stage, setStage] = React.useState<"lookup" | "confirm" | "rsvp" | "success">("lookup");
+  const [stage, setStage] = React.useState<"lookup" | "select" | "rsvp" | "success">("lookup");
   const [searchAgain, setSearchAgain] = React.useState(false);
+  const [selectedPartyId, setSelectedPartyId] = React.useState<string | null>(null);
+  const [searchedName, setSearchedName] = React.useState("");
   const [party, setParty] = React.useState<PartyView | null>(null);
   const [passes, setPasses] = React.useState<PassView[]>([]);
 
@@ -48,16 +51,17 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
     if (env && !env.opened) {
       setStage("lookup");
       setSearchAgain(true);
+      setSelectedPartyId(null);
       setParty(null);
     }
   }, [env?.opened]);
-  const [lookup, lookupFormAction, lookupPending] = useActionState(
-    lookupAction,
-    initialLookup,
+  const [search, searchFormAction, searchPending] = useActionState(
+    searchInvitationsAction,
+    initialSearch,
   );
-  const [confirmation, confirmFormAction, confirmPending] = useActionState(
-    confirmInvitationAction,
-    initialConfirmation,
+  const [selection, selectFormAction, selectPending] = useActionState(
+    selectInvitationAction,
+    initialSelect,
   );
   const [rsvpState, rsvpFormAction, rsvpPending] = useActionState(
     submitRsvpAction,
@@ -65,18 +69,23 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
   );
 
 
-  // Stage 1 -> Stage 2
+  // Stage 1 -> Stage 2 (results list)
   React.useEffect(() => {
-    if (lookup.status === "confirmation" && !searchAgain) {
-      setStage("confirm");
+    if (search.status === "results" && !searchAgain) {
+      setStage("select");
+      setSelectedPartyId((prev) =>
+        prev && search.candidates.some((c) => c.partyId === prev)
+          ? prev
+          : (search.candidates[0]?.partyId ?? null),
+      );
     } else {
       setStage("lookup");
     }
-  }, [lookup, searchAgain]);
+  }, [search, searchAgain]);
 
   // Stage 2 -> Stage 3
   React.useEffect(() => {
-    if (confirmation.status === "success") {
+    if (selection.status === "success") {
       getPartyAction().then((p) => {
         if (p) {
           setParty(p);
@@ -86,7 +95,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
         }
       });
     }
-  }, [confirmation]);
+  }, [selection]);
 
   // Stage 3 -> Stage 4
   React.useEffect(() => {
@@ -133,6 +142,12 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
             {isAttending
               ? "We can't wait to celebrate with you! Here is your wedding pass:"
               : "We've saved your response. We will miss you!"}
+          </p>
+          <p className="text-[10px] text-rose-600/90 font-semibold pt-1">
+            A confirmation email will arrive in a few minutes.
+          </p>
+          <p className="text-[10px] text-muted-ink/70">
+            You can update your RSVP until {site.event.rsvpDeadlineDisplay}.
           </p>
         </motion.div>
 
@@ -295,104 +310,99 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
     );
   }
 
-  if (stage === "confirm") {
+  if (stage === "select" && search.status === "results") {
+    const candidates: SearchCandidateView[] = search.candidates;
     return (
-      <form action={confirmFormAction} className="w-full space-y-6 text-center">
-        {/* Verification Icon */}
-        <motion.div
-          className="mx-auto w-12 h-12 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 mb-1"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 120, damping: 10, delay: 0.1 }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
-        </motion.div>
+      <form action={selectFormAction} className="w-full space-y-5">
+        <input type="hidden" name="fullName" value={searchedName} />
+        <input type="hidden" name="partyId" value={selectedPartyId ?? ""} />
 
         <motion.div
-          className="space-y-1"
+          className="text-center select-none space-y-1"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.2 }}
+          transition={{ duration: 0.45 }}
         >
           <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-rose-600/90">
-            Invitation Found
+            Select Your Name
           </p>
           <h3 className="font-display text-xl font-bold text-ink leading-tight">
-            Is this your invitation?
+            Which one is you?
           </h3>
         </motion.div>
 
-        <motion.div
-          className="rounded-full px-5 py-3 font-semibold text-rose-800 text-center text-lg tracking-wide shadow-sm"
-          style={{
-            background: "rgba(253, 244, 245, 0.8)",
-            border: "1px dashed rgba(212, 81, 110, 0.3)",
-          }}
-          initial={{ opacity: 0, scale: 0.93 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.45, delay: 0.35 }}
+        <div
+          role="radiogroup"
+          aria-label="Matching invitations"
+          className="max-h-[40dvh] space-y-2 overflow-y-auto pr-1"
         >
-          {lookup.status === "confirmation" ? lookup.guestName : ""}
-        </motion.div>
+          {candidates.map((c) => {
+            const isSel = selectedPartyId === c.partyId;
+            return (
+              <label
+                key={c.partyId}
+                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border-2 bg-white/80 px-4 py-3 text-sm font-semibold text-rose-900 transition-all has-[:checked]:border-rose-400 has-[:checked]:bg-rose-100/70 focus-within:ring-2 focus-within:ring-rose-300"
+                style={{ borderColor: isSel ? "#fb7185" : "rgba(251,113,133,0.25)" }}
+              >
+                <input
+                  type="radio"
+                  name="candidate"
+                  value={c.partyId}
+                  checked={isSel}
+                  onChange={() => setSelectedPartyId(c.partyId)}
+                  className="accent-rose-500"
+                />
+                <span className="min-w-0 break-words">{c.guestName}</span>
+              </label>
+            );
+          })}
+        </div>
 
-        {(confirmation.status === "expired" ||
-          confirmation.status === "unconfigured" ||
-          confirmation.status === "error") && (
-            <motion.p
-              role="alert"
-              className="rounded-xl bg-rose/5 border border-rose/15 px-3.5 py-2 text-xs text-rose/90 leading-normal"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              {confirmation.status === "expired"
-                ? "This confirmation expired. Please search again."
-                : confirmation.status === "unconfigured"
-                  ? "The invitation service isn't available yet."
-                  : confirmation.message}
-            </motion.p>
-          )}
+        {(selection.status === "invalid" ||
+          selection.status === "unconfigured" ||
+          selection.status === "error") && (
+          <p role="alert" className="rounded-xl bg-rose/5 border border-rose/15 px-3.5 py-2 text-xs text-rose/90 leading-normal text-center">
+            {selection.status === "invalid"
+              ? "Please pick your name from the list, or search again."
+              : selection.status === "unconfigured"
+                ? "The invitation service isn't available yet."
+                : selection.message}
+          </p>
+        )}
 
         <div className="space-y-2 pt-1">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.5 }}
+          <Button
+            type="submit"
+            size="default"
+            className="w-full h-12 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-950/20 hover:shadow-lg hover:shadow-rose-950/30 font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200"
+            disabled={selectPending || !selectedPartyId}
           >
-            <Button
-              type="submit"
-              size="default"
-              className="w-full h-12 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-950/20 hover:shadow-lg hover:shadow-rose-950/30 font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200"
-              disabled={confirmPending}
-            >
-              {confirmPending ? "Confirming…" : "Yes, continue"}
-            </Button>
-          </motion.div>
+            {selectPending ? "Confirming…" : "This is me — continue"}
+          </Button>
 
-          <motion.button
+          <button
             type="button"
             className="min-h-9 w-full text-xs text-muted-ink hover:text-rose-600 transition-colors font-medium flex items-center justify-center gap-1 select-none underline underline-offset-4"
             onClick={() => setSearchAgain(true)}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.65 }}
           >
-            No, search again
-          </motion.button>
+            Search again
+          </button>
         </div>
       </form>
     );
   }
 
-  // Screen 1: Lookup Form
-  const message = messageFor(lookup);
+  // Screen 1: Lookup / Search Form
+  const message = messageFor(search);
 
   return (
     <form
-      action={lookupFormAction}
-      onSubmit={() => setSearchAgain(false)}
+      action={searchFormAction}
+      onSubmit={(e) => {
+        setSearchAgain(false);
+        const value = new FormData(e.currentTarget).get("fullName");
+        setSearchedName(typeof value === "string" ? value : "");
+      }}
       className="w-full space-y-6"
     >
       <motion.div
@@ -407,6 +417,11 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
         <p className="text-xs text-muted-ink/80">
           Please enter the full name used on your invitation.
         </p>
+        {rsvpOpen && (
+          <p className="text-[11px] font-semibold text-rose-600/90 pt-0.5">
+            Kindly RSVP by {site.event.rsvpDeadlineDisplay}.
+          </p>
+        )}
       </motion.div>
 
       <motion.div
@@ -427,7 +442,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
           maxLength={120}
           placeholder="e.g. Maria Santos"
           aria-describedby={message ? "lookup-message" : undefined}
-          disabled={lookupPending}
+          disabled={searchPending}
           className="h-12 text-center text-base px-4 bg-gradient-to-b from-white to-rose-50/40 border-4 border-rose-300 rounded-full focus:bg-rose-50/30 focus:border-rose-400 focus:ring-2 focus:ring-rose-400/50 transition-all duration-200 text-ink placeholder:text-muted-ink/65"
         />
       </motion.div>
@@ -452,9 +467,9 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
           type="submit"
           size="default"
           className="w-full h-12 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-950/20 hover:shadow-lg hover:shadow-rose-950/30 font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200"
-          disabled={lookupPending}
+          disabled={searchPending}
         >
-          {lookupPending ? "Searching…" : "Open My Invitation"}
+          {searchPending ? "Searching…" : "Search My Invitation"}
         </Button>
       </motion.div>
 
@@ -470,11 +485,10 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
   );
 }
 
-function messageFor(state: LookupActionState): string | null {
+function messageFor(state: SearchActionState): string | null {
   switch (state.status) {
-    case "ambiguous":
-    case "not_found":
-      return "We couldn't find a unique match. Check spelling or use your exact invitation name.";
+    case "empty":
+      return "We couldn't find a match. Check the spelling or try the exact name on your invitation.";
     case "rate_limited":
       return "Too many attempts. Please wait a moment and try again.";
     case "closed":

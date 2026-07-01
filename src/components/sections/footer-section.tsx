@@ -73,20 +73,6 @@ export function FooterSection({ weddingDate }: { weddingDate?: string }) {
           </p>
         )}
 
-        {/* Hashtag pill */}
-        <div className="mt-5">
-          <span
-            className="inline-block rounded-full px-4 py-1.5 text-sm font-semibold"
-            style={{
-              background: "linear-gradient(135deg, rgba(240,168,188,0.3), rgba(181,160,213,0.25))",
-              border: "1px solid rgba(240,168,188,0.35)",
-              color: "#d4516e",
-            }}
-          >
-            {site.social.hashtag}
-          </span>
-        </div>
-
         {/* Back to top */}
         <div className="mt-8">
           <a

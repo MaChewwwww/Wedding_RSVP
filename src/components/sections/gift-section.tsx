@@ -49,8 +49,8 @@ export function GiftSection() {
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-butter-deep/80">
           With love
         </p>
-        <h2 className="mt-1 font-cursive text-5xl leading-tight text-gold sm:text-6xl">
-          Love Gift
+        <h2 className="mt-1 font-cursive text-4xl leading-tight text-gold sm:text-5xl text-balance">
+          A Token of Love for the Couple
         </h2>
         <div className="mx-auto mt-3 mb-5 flex items-center justify-center gap-3">
           <div className="h-px w-16" style={{ background: "linear-gradient(to right, rgba(200,150,60,0.5), transparent)" }} />

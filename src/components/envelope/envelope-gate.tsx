@@ -448,6 +448,14 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
                   </motion.span>
                 ))}
               </h1>
+              <motion.p
+                className="font-sans text-[11px] sm:text-xs font-bold tracking-[0.35em] text-blush-deep/80 uppercase mt-2"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 + titleLetters.length * 0.04 }}
+              >
+                Wedding
+              </motion.p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -814,6 +822,22 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
 
             {/* Double border overlay */}
             <div className="absolute inset-2.5 border border-rose/15 rounded-lg pointer-events-none z-10" />
+
+            {/* Back button — top left of card */}
+            <motion.button
+              type="button"
+              onClick={close}
+              className="absolute top-4 left-4 w-8 h-8 rounded-full flex items-center justify-center bg-rose-100/60 hover:bg-rose-200/80 border border-rose-300/35 text-rose-700 hover:text-rose-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-rose-300 z-40 cursor-pointer shadow-sm"
+              aria-label="Go back"
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.25, delay: 0.25, ease: "easeOut" }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+            </motion.button>
 
             {/* Close button — top right of card */}
             <motion.button

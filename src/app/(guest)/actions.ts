@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { createHash } from "node:crypto";
 import { nameLookupSchema } from "@/server/rsvp/schema";
 import { lookupInvitation } from "@/server/matching/lookup";
+import { searchInvitations } from "@/server/matching/search";
 import { createGuestSession } from "@/server/session/guest-session";
 import { loadPartyConfirmation } from "@/server/matching/confirmation";
 import {
@@ -97,6 +98,113 @@ export async function lookupAction(
       status: "error",
       message: "Something went wrong. Please try again.",
     };
+  }
+}
+
+export type SearchCandidateView = { partyId: string; guestName: string };
+
+export type SearchActionState =
+  | { status: "idle" }
+  | { status: "results"; candidates: SearchCandidateView[] }
+  | { status: "empty" }
+  | { status: "rate_limited" }
+  | { status: "closed" }
+  | { status: "unconfigured" }
+  | { status: "error"; message: string };
+
+/*
+  Name search that returns a small list of matching guest names for the guest to
+  select from (radio). Surfaces guest names by product decision; still
+  rate-limited by hashed IP.
+*/
+export async function searchInvitationsAction(
+  _prev: SearchActionState,
+  formData: FormData,
+): Promise<SearchActionState> {
+  const requestId = randomUUID();
+
+  const parsed = nameLookupSchema.safeParse({
+    fullName: formData.get("fullName"),
+  });
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: parsed.error.issues[0]?.message ?? "Please check your entry.",
+    };
+  }
+
+  if (!isBackendConfigured()) {
+    logger.warn("search_unconfigured", { requestId });
+    return { status: "unconfigured" };
+  }
+
+  const clientId = await hashedClientId();
+  const rl = rateLimit(`nameLookup:${clientId}`, RATE_LIMITS.nameLookup);
+  if (!rl.success) {
+    logger.warn("search_rate_limited", { requestId });
+    return { status: "rate_limited" };
+  }
+
+  try {
+    const candidates = await searchInvitations(parsed.data.fullName);
+    logger.info("invitation_search", { requestId, resultCount: candidates.length });
+    if (candidates.length === 0) return { status: "empty" };
+    return { status: "results", candidates };
+  } catch (err) {
+    logger.error("search_failed", {
+      requestId,
+      error: err instanceof Error ? err.message : "unknown",
+    });
+    return { status: "error", message: "Something went wrong. Please try again." };
+  }
+}
+
+export type SelectInvitationState =
+  | { status: "idle" }
+  | { status: "success" }
+  | { status: "invalid" }
+  | { status: "unconfigured" }
+  | { status: "error"; message: string };
+
+/*
+  Confirms a guest-selected party from the search results. Re-runs the search
+  server-side and verifies the chosen partyId is a legitimate match before
+  creating a session — never trust the client-supplied partyId alone.
+*/
+export async function selectInvitationAction(
+  _prev: SelectInvitationState,
+  formData: FormData,
+): Promise<SelectInvitationState> {
+  void _prev;
+  const requestId = randomUUID();
+
+  if (!isBackendConfigured()) return { status: "unconfigured" };
+
+  const partyId = String(formData.get("partyId") ?? "");
+  const parsedName = nameLookupSchema.safeParse({
+    fullName: formData.get("fullName"),
+  });
+  if (!partyId || !parsedName.success) return { status: "invalid" };
+
+  const clientId = await hashedClientId();
+  const rl = rateLimit(`nameLookup:${clientId}`, RATE_LIMITS.nameLookup);
+  if (!rl.success) {
+    return { status: "error", message: "Too many attempts. Please wait a moment." };
+  }
+
+  try {
+    const candidates = await searchInvitations(parsedName.data.fullName);
+    const match = candidates.find((c) => c.partyId === partyId);
+    if (!match) return { status: "invalid" };
+
+    await createGuestSession(match.partyId);
+    return { status: "success" };
+  } catch (err) {
+    logger.error("select_invitation_failed", {
+      requestId,
+      error: err instanceof Error ? err.message : "unknown",
+    });
+    return { status: "error", message: "We couldn't confirm this invitation. Please try again." };
   }
 }
 

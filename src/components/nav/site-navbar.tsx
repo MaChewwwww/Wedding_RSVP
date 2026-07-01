@@ -216,10 +216,10 @@ function MobileMenu({
       {/* Drawer panel — fixed, full-height, slides from right */}
       <motion.div
         ref={panelRef}
-        className="fixed right-0 top-0 flex h-full w-72 max-w-[85vw] flex-col shadow-2xl"
+        className="fixed right-0 top-0 flex h-full w-[86vw] max-w-sm flex-col shadow-2xl"
         style={{
           background: "#fdf0f6",
-          backgroundImage: "linear-gradient(160deg, #fde8f0 0%, #fdf4f8 45%, #ede8fd 100%)",
+          backgroundImage: "linear-gradient(165deg, #fde8f0 0%, #fdf4f8 40%, #ede8fd 100%)",
           borderLeft: "1px solid rgba(240,168,188,0.4)",
           boxShadow: "-8px 0 40px rgba(80,40,60,0.18)",
         }}
@@ -228,63 +228,109 @@ function MobileMenu({
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 320, damping: 38 }}
       >
-        {/* Header row */}
-        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(240,168,188,0.25)" }}>
-          <span className="font-cursive text-3xl leading-none" style={{ color: "#d4516e" }}>
-            {site.couple.monogram}
-          </span>
-          <button
-            ref={closeRef}
-            type="button"
-            aria-label="Close menu"
-            onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors"
-            style={{ background: "rgba(212,81,110,0.08)" }}
-          >
-            <X className="h-5 w-5" style={{ color: "#d4516e" }} aria-hidden />
-          </button>
+        {/* Decorative header */}
+        <div
+          className="relative overflow-hidden px-6 pb-6 pt-5"
+          style={{ borderBottom: "1px solid rgba(240,168,188,0.3)" }}
+        >
+          {/* soft glow blob */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(181,160,213,0.35) 0%, transparent 70%)", filter: "blur(24px)" }}
+          />
+          <div className="relative flex items-start justify-between">
+            <div>
+              <motion.p
+                className="font-cursive text-4xl leading-none"
+                style={{ color: "#d4516e" }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.05 }}
+              >
+                {site.couple.displayName}
+              </motion.p>
+              <motion.p
+                className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-muted-ink/70"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.12 }}
+              >
+                {site.event.weddingDate}
+              </motion.p>
+            </div>
+            <button
+              ref={closeRef}
+              type="button"
+              aria-label="Close menu"
+              onClick={onClose}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-rose-200/60"
+              style={{ background: "rgba(212,81,110,0.08)" }}
+            >
+              <X className="h-5 w-5" style={{ color: "#d4516e" }} aria-hidden />
+            </button>
+          </div>
         </div>
 
         {/* Nav links — scrollable if many */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <ul className="flex flex-col gap-1">
-            {sections.map((s) => (
-              <li key={s.id}>
-                <a
-                  href={`#${s.id}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" });
-                    onClose();
-                  }}
-                  className={`relative rounded-full px-4 py-1.5 text-sm transition-all ${active === s.id ? "font-bold" : "font-semibold"
-                    }`}
-                  style={{
-                    color: active === s.id ? "#d4516e" : "#382e2a",
-                    background: active === s.id ? "rgba(255, 255, 255, 0.6)" : "transparent",
-                    textShadow: "0 1px 2px rgba(255,255,255,0.5)",
-                    letterSpacing: "0.01em",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (active !== s.id) (e.currentTarget as HTMLElement).style.background = "rgba(255, 255, 255, 0.3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (active !== s.id) (e.currentTarget as HTMLElement).style.background = "transparent";
-                  }}
+        <nav className="flex-1 overflow-y-auto px-4 py-5">
+          <ul className="flex flex-col gap-1.5">
+            {sections.map((s, i) => {
+              const isActive = active === s.id;
+              return (
+                <motion.li
+                  key={s.id}
+                  initial={{ opacity: 0, x: 24 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.35, delay: 0.1 + i * 0.05, ease: "easeOut" }}
                 >
-                  {s.label}
-                </a>
-              </li>
-            ))}
+                  <a
+                    href={`#${s.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" });
+                      onClose();
+                    }}
+                    aria-current={isActive ? "true" : undefined}
+                    className="group relative flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all"
+                    style={{
+                      background: isActive ? "rgba(255,255,255,0.75)" : "transparent",
+                      boxShadow: isActive ? "0 4px 16px rgba(212,81,110,0.12)" : "none",
+                    }}
+                  >
+                    {/* active accent bar */}
+                    <span
+                      aria-hidden
+                      className="h-6 w-1 rounded-full transition-all"
+                      style={{
+                        background: isActive
+                          ? "linear-gradient(to bottom, #f0a8bc, #b5a0d5)"
+                          : "rgba(212,81,110,0.15)",
+                        transform: isActive ? "scaleY(1)" : "scaleY(0.5)",
+                      }}
+                    />
+                    <span
+                      className="text-base transition-colors"
+                      style={{
+                        color: isActive ? "#d4516e" : "#382e2a",
+                        fontWeight: isActive ? 700 : 500,
+                      }}
+                    >
+                      {s.label}
+                    </span>
+                  </a>
+                </motion.li>
+              );
+            })}
           </ul>
         </nav>
 
         {/* Footer — admin link */}
-        <div className="px-3 pb-6 pt-3" style={{ borderTop: "1px solid rgba(240,168,188,0.25)" }}>
+        <div className="px-4 pb-6 pt-3" style={{ borderTop: "1px solid rgba(240,168,188,0.25)" }}>
           <Link
             href="/admin/login"
             onClick={onClose}
-            className="block w-full text-center rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="block w-full text-center rounded-2xl px-4 py-3.5 text-sm font-bold uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-sm"
             style={{
               color: "#8b70c0",
               background: "rgba(255,255,255,0.5)",

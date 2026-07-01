@@ -7,7 +7,6 @@ import { FeaturedSection } from "@/components/sections/featured-section";
 import { GallerySection } from "@/components/sections/gallery-section";
 import { PlacesSection } from "@/components/sections/places-section";
 import { InvitationsSection } from "@/components/sections/invitations-section";
-import { EntourageSection } from "@/components/sections/entourage-section";
 import { FaqSection } from "@/components/sections/faq-section";
 import { GiftSection } from "@/components/sections/gift-section";
 import { FooterSection } from "@/components/sections/footer-section";
@@ -52,6 +51,11 @@ export default async function CelebrationPage() {
 
         <SectionDivider />
 
+        {/* ── Invitations (butter/gold gradient) ────────────────────── */}
+        <InvitationsSection />
+
+        <SectionDivider />
+
         {/* ── Our Story (blush/lavender/sage gradient) ───────────────── */}
         <StorySection />
 
@@ -69,16 +73,6 @@ export default async function CelebrationPage() {
 
         {/* ── Places & Venues (bg5 outdoor) ─────────────────────────── */}
         <PlacesSection weddingDate={configured ? envConfig?.WEDDING_DATE : undefined} />
-
-        <SectionDivider />
-
-        {/* ── Invitations (butter/gold gradient) ────────────────────── */}
-        <InvitationsSection />
-
-        <SectionDivider />
-
-        {/* ── Entourage (sky/lavender/blush gradient) ───────────────── */}
-        <EntourageSection />
 
         <SectionDivider />
 

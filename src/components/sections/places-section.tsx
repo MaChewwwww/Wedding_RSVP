@@ -90,7 +90,7 @@ function Countdown({ weddingDate }: { weddingDate?: string }) {
 
   React.useEffect(() => {
     const dateToUse = weddingDate || site.event.weddingDate;
-    const target = new Date(`${dateToUse}T14:00:00`).getTime();
+    const target = new Date(`${dateToUse}T15:00:00`).getTime();
     
     const calculateTimeLeft = () => {
       const now = new Date().getTime();
@@ -179,7 +179,7 @@ function VenueCard({ venue, index }: { venue: Venue; index: number }) {
       </div>
 
       {/* Text Column */}
-      <div className="flex-1 flex flex-col gap-4 p-6 sm:p-8 sm:flex-row sm:items-center">
+      <div className="flex-1 flex flex-col gap-4 p-6 sm:p-8 lg:flex-row lg:items-center">
         <div className="flex-1 min-w-0">
           <span
             className="inline-block rounded-full px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white mb-2"
@@ -187,13 +187,13 @@ function VenueCard({ venue, index }: { venue: Venue; index: number }) {
           >
             {venue.type}
           </span>
-          <h3 className="font-display text-2xl font-semibold text-ink">{venue.name}</h3>
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-ink">
-            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            {venue.address}
+          <h3 className="font-display text-xl sm:text-2xl font-semibold text-ink break-words">{venue.name}</h3>
+          <p className="mt-1 flex items-start gap-1.5 text-sm text-muted-ink break-words">
+            <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden />
+            <span className="min-w-0">{venue.address}</span>
           </p>
           <p className="mt-1 text-sm font-medium text-ink/70">
-            {venue.date} · {venue.startTime}–{venue.endTime}
+            {venue.date} · {venue.timeLabel}
           </p>
           <p className="mt-2 text-sm leading-relaxed text-muted-ink">{venue.description}</p>
           {venue.isPlaceholder && (
@@ -205,7 +205,7 @@ function VenueCard({ venue, index }: { venue: Venue; index: number }) {
           href={venue.googleMapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all hover:scale-105 hover:shadow-md"
+          className="inline-flex min-h-10 w-full lg:w-auto shrink-0 items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all hover:scale-105 hover:shadow-md"
           style={{
             background: `linear-gradient(135deg, ${accent.pill}, ${accent.pill}cc)`,
             boxShadow: `0 4px 14px ${accent.pill}40`,

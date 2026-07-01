@@ -18,30 +18,27 @@ export const site = {
     monogram: "J&A",
   },
   event: {
-    // PLACEHOLDER — confirm final wedding date/time (open-questions P0 #1).
-    weddingDate: "2026-08-15",
+    weddingDate: "2026-07-21",
     timezone: "Asia/Manila",
     // Display-only mirror of the server RSVP_DEADLINE; the server value is
     // authoritative for any mutation decision.
-    rsvpDeadlineDisplay: "July 10, 2026",
-    // PLACEHOLDER — monitored RSVP support contact (open-questions P0 #8).
+    rsvpDeadlineDisplay: "July 8, 2026",
     supportContact: {
-      name: "Wedding Coordinator",
-      email: "rsvp@example.com",
+      name: "Bride & Groom",
+      email: "parocha.johnmathew23@gmail.com",
       phone: "",
     },
   },
   navigation: {
     sections: [
       { id: "welcome", label: "Welcome" },
-      { id: "pass", label: "Pass" },
-      { id: "story", label: "Our Story" },
-      { id: "gallery", label: "Gallery" },
-      { id: "places", label: "Places" },
+      { id: "pass", label: "Wedding Pass" },
       { id: "invitations", label: "Invitations" },
-      { id: "entourage", label: "Entourage" },
+      { id: "story", label: "Our Story" },
+      { id: "gallery", label: "Prenup" },
+      { id: "places", label: "Places" },
       { id: "faq", label: "FAQ" },
-      { id: "gift", label: "Love Gift" },
+      { id: "gift", label: "Gift" },
     ] satisfies NavSection[],
   },
   copy: {

@@ -1,23 +1,17 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Section } from "./section";
 
 /*
-  Pre-wedding gallery — Embla carousel with dot navigation,
-  gradient slide placeholders, frosted-glass arrows.
+  Prenup photos — Embla carousel with dot navigation and frosted-glass arrows.
+  Images live in public/assets/prenup (see scripts/optimize-gallery.ts).
 */
 
-const SLIDES = [
-  { n: 1, from: "#fde8f0", to: "#f9c2d0" },
-  { n: 2, from: "#d4edcf", to: "#b8d9b3" },
-  { n: 3, from: "#e8e0f5", to: "#c8b8e8" },
-  { n: 4, from: "#fdf3c0", to: "#f5e080" },
-  { n: 5, from: "#d6eef8", to: "#a8d4ee" },
-  { n: 6, from: "#fde8f0", to: "#e8c0d0" },
-];
+const SLIDES = Array.from({ length: 15 }, (_, i) => ({ n: i + 1, src: `/assets/prenup/${i + 1}.jpg` }));
 
 export function GallerySection() {
   const [emblaRef, embla] = useEmblaCarousel({ loop: false, align: "center" });
@@ -51,7 +45,7 @@ export function GallerySection() {
           Memories
         </p>
         <h2 className="mt-1 font-cursive text-5xl leading-tight text-sage-deep sm:text-6xl">
-          Gallery
+          Prenup Photos
         </h2>
       </div>
 
@@ -85,16 +79,16 @@ export function GallerySection() {
                   }}
                 >
                   <div
-                    className="flex aspect-[4/3] items-center justify-center rounded-lg overflow-hidden relative"
-                    style={{
-                      background: `linear-gradient(135deg, ${s.from}, ${s.to})`,
-                      boxShadow: "inset 0 2px 10px rgba(0,0,0,0.05)"
-                    }}
+                    className="relative aspect-[4/3] overflow-hidden rounded-lg"
+                    style={{ boxShadow: "inset 0 2px 10px rgba(0,0,0,0.05)" }}
                   >
-                    <div className="text-center">
-                      <div className="text-3xl mb-2 opacity-40">🌸</div>
-                      <p className="text-sm font-medium text-ink/50">Gallery Photo {s.n}</p>
-                    </div>
+                    <Image
+                      src={s.src}
+                      alt={`Prenup photo ${s.n}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 85vw, (max-width: 1024px) 60vw, 45vw"
+                    />
                   </div>
                 </div>
               </div>

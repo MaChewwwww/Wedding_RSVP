@@ -1,20 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import * as React from "react";
 
 /*
-  Featured pre-wedding — couple hero illustration as full-bleed background,
-  polaroid-style photo placeholders with hover tilt.
+  Featured pre-wedding — couple hero illustration as full-bleed background
+  with a copy card. Responsive on mobile.
 */
-
-const PHOTO_COUNT = 3;
-
-const PHOTO_COLORS = [
-  { from: "#fde8f0", to: "#f9c2d0", label: "blush" },
-  { from: "#d4edcf", to: "#b8d9b3", label: "sage" },
-  { from: "#e8e0f5", to: "#c8b8e8", label: "lavender" },
-];
 
 export function FeaturedSection() {
   return (
@@ -31,7 +22,7 @@ export function FeaturedSection() {
           alt="Jobert and April in a romantic watercolor garden"
           fill
           priority
-          className="object-contain object-bottom scale-[1.35] origin-bottom-left lg:object-cover lg:object-right lg:scale-[1.28] lg:origin-left transition-transform duration-500 ease-out"
+          className="object-cover object-center lg:object-right lg:scale-[1.28] lg:origin-left transition-transform duration-500 ease-out"
           sizes="100vw"
         />
         {/* Gradient overlay for text legibility and pastel mood */}
@@ -51,7 +42,7 @@ export function FeaturedSection() {
         {/* Left — copy */}
         <div className="flex flex-col gap-6">
           <div
-            className="rounded-2xl p-6 sm:p-8 max-w-md flex flex-col gap-3"
+            className="rounded-2xl p-6 sm:p-8 w-full max-w-md flex flex-col gap-3"
             style={{
               background: "rgba(255, 250, 246, 0.78)",
               backdropFilter: "blur(12px)",
@@ -63,56 +54,13 @@ export function FeaturedSection() {
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-blush-deep/80">
               Pre-Wedding
             </p>
-            <h2 className="font-cursive text-6xl leading-none text-rose sm:text-7xl"
+            <h2 className="font-cursive text-5xl leading-none text-rose sm:text-7xl"
               style={{ textShadow: "0 2px 16px rgba(212,81,110,0.12)" }}>
               Jobert &amp; April
             </h2>
             <p className="text-sm sm:text-base leading-relaxed text-ink/75">
               A few of our favorite moments leading up to the big day — a glimpse into our love story.
             </p>
-          </div>
-
-          {/* Polaroid photo grid */}
-          <div className="relative mt-12 flex flex-col items-start sm:mt-12 sm:grid sm:grid-cols-3 sm:gap-4 sm:max-w-md sm:scale-[1.45] sm:origin-top-left">
-            {Array.from({ length: PHOTO_COUNT }).map((_, i) => (
-              <div
-                key={i}
-                className={`group relative w-[180px] cursor-pointer sm:w-auto ${i === 0 ? "z-10 ml-4 sm:ml-0" : i === 1 ? "z-20 -mt-12 ml-12 sm:mt-0 sm:ml-0" : "z-30 -mt-10 ml-6 sm:mt-0 sm:ml-0"
-                  }`}
-                style={{
-                  transform: `rotate(${i === 0 ? "-4" : i === 1 ? "6" : "-2"}deg)`,
-                  transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform = "rotate(0deg) scale(1.05)";
-                  (e.currentTarget as HTMLDivElement).style.zIndex = "40";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform = `rotate(${i === 0 ? "-4" : i === 1 ? "6" : "-2"}deg)`;
-                  (e.currentTarget as HTMLDivElement).style.zIndex = i === 0 ? "10" : i === 1 ? "20" : "30";
-                }}
-              >
-                {/* Polaroid frame */}
-                <div
-                  className="rounded-sm shadow-lg"
-                  style={{
-                    background: "#fffdf9",
-                    padding: "8px 8px 24px",
-                    boxShadow: "0 12px 30px -5px rgba(0,0,0,0.25), 0 8px 15px -5px rgba(0,0,0,0.15)",
-                  }}
-                >
-                  <div
-                    className="flex aspect-square items-center justify-center rounded-sm text-xs font-medium"
-                    style={{
-                      background: `linear-gradient(135deg, ${PHOTO_COLORS[i].from}, ${PHOTO_COLORS[i].to})`,
-                      color: "rgba(80,50,50,0.6)",
-                    }}
-                  >
-                    Photo {i + 1}
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 

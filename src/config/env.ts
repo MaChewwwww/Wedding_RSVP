@@ -58,7 +58,7 @@ const serverSchema = z.object({
 
   // Deadline is required in preview/production; default the documented value so
   // local scaffold-mode still boots with a sane, valid timestamp.
-  RSVP_DEADLINE: isoWithOffset.default("2026-07-10T23:59:59+08:00"),
+  RSVP_DEADLINE: isoWithOffset.default("2026-07-08T23:59:59+08:00"),
 
   WEDDING_DATE: z.string().optional(),
   NAME_MATCH_THRESHOLD: z.coerce.number().min(0).max(1).default(0.85),
