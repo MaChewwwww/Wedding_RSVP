@@ -52,10 +52,15 @@ export function PassEmail({ partyName, passUrl, googleCalendarUrl, passes }: Pas
           {/* ── Top petal border strip ─────────────────────────────── */}
           <Section style={{
             background: "linear-gradient(135deg, #fde8f0 0%, #f5e4f8 50%, #e8f0fd 100%)",
+            margin: "0 20px",
             padding: "8px 0",
             textAlign: "center" as const,
             fontSize: "20px",
             letterSpacing: "4px",
+            borderRadius: "12px 12px 0 0",
+            borderLeft: "1px solid #fde8f0",
+            borderRight: "1px solid #fde8f0",
+            borderTop: "1px solid #fde8f0",
           }}>
             <Text style={{ margin: 0, color: "#d4516e" }}>🌸 🌷 🌸 🌷 🌸</Text>
           </Section>
@@ -63,8 +68,11 @@ export function PassEmail({ partyName, passUrl, googleCalendarUrl, passes }: Pas
           {/* ── Hero header ───────────────────────────────────────── */}
           <Section style={{
             background: "linear-gradient(160deg, #fde8f0 0%, #fdf3c0 40%, #fde8f0 100%)",
+            margin: "0 20px",
             padding: "48px 40px 36px",
             textAlign: "center" as const,
+            borderLeft: "1px solid #fde8f0",
+            borderRight: "1px solid #fde8f0",
           }}>
             {/* Eyebrow */}
             <Text style={{
@@ -317,11 +325,9 @@ export function PassEmail({ partyName, passUrl, googleCalendarUrl, passes }: Pas
           <Section style={{
             background: "linear-gradient(135deg, #fdf3c0 0%, #fde8f0 100%)",
             margin: "0 20px",
-            padding: "32px 40px 40px",
+            padding: "32px 40px 24px",
             borderLeft: "1px solid #f5e4a8",
             borderRight: "1px solid #f9d8e5",
-            borderBottom: "3px solid #d4516e",
-            borderRadius: "0 0 12px 12px",
             textAlign: "center" as const,
           }}>
             <Text style={{
@@ -357,10 +363,15 @@ export function PassEmail({ partyName, passUrl, googleCalendarUrl, passes }: Pas
           {/* ── Bottom petal strip ────────────────────────────────── */}
           <Section style={{
             background: "linear-gradient(135deg, #e8f0fd 0%, #f5e4f8 50%, #fde8f0 100%)",
+            margin: "0 20px",
             padding: "8px 0",
             textAlign: "center" as const,
             fontSize: "20px",
             letterSpacing: "4px",
+            borderLeft: "1px solid #fde8f0",
+            borderRight: "1px solid #fde8f0",
+            borderBottom: "3px solid #d4516e",
+            borderRadius: "0 0 12px 12px",
           }}>
             <Text style={{ margin: 0, color: "#d4516e" }}>🌸 🌷 🌸 🌷 🌸</Text>
           </Section>
