@@ -46,9 +46,6 @@ export function GiftSection() {
       }}
     >
       <div className="mx-auto max-w-2xl text-center">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-butter-deep/80">
-          With love
-        </p>
         <h2 className="mt-1 font-cursive text-4xl leading-tight text-gold sm:text-5xl text-balance">
           A Token of Love for the Couple
         </h2>
@@ -120,7 +117,7 @@ function GiftCard({
       </p>
 
       {/* QR Code Placeholder */}
-      <div 
+      <div
         className="mb-6 flex h-36 w-36 items-center justify-center rounded-2xl bg-white/50 shadow-inner"
         style={{ border: `2px dashed ${style.accent}40` }}
       >

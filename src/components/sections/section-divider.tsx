@@ -18,25 +18,44 @@ interface Props {
 }
 
 /*
-  SectionDivider — a very simple, understated separator: a thin hairline with a
-  small centered dot. Replaces the previous ornate floral divider per client
-  feedback ("too elegant / fairytale").
+  SectionDivider — triple-rule hairline: a thin ivory line above, a thin dark
+  line in the middle, and a thin ivory line below, centered on a small rotated
+  diamond. Gives a refined "sandwich" look without visual weight.
 */
 export function SectionDivider(_props: Props) {
   return (
     <div
       aria-hidden
-      className="relative flex items-center justify-center gap-3 w-full px-6 py-8 pointer-events-none select-none"
+      className="relative flex w-full items-center justify-center px-6 py-6 pointer-events-none select-none"
     >
-      <div
-        className="h-px flex-1 max-w-[120px]"
-        style={{ background: "linear-gradient(to right, transparent, rgba(58,51,48,0.18))" }}
-      />
-      <span className="h-1.5 w-1.5 rounded-full" style={{ background: "rgba(58,51,48,0.28)" }} />
-      <div
-        className="h-px flex-1 max-w-[120px]"
-        style={{ background: "linear-gradient(to left, transparent, rgba(58,51,48,0.18))" }}
-      />
+      <div className="flex w-full max-w-sm items-center gap-3">
+        {/* Left triple-rule */}
+        <div className="flex flex-1 flex-col gap-[3px]">
+          <div style={{ height: 1, background: "linear-gradient(to right, transparent, rgba(255,252,245,0.65))" }} />
+          <div style={{ height: 1, background: "linear-gradient(to right, transparent, rgba(30,20,10,0.55))" }} />
+          <div style={{ height: 1, background: "linear-gradient(to right, transparent, rgba(255,252,245,0.65))" }} />
+        </div>
+
+        {/* Center diamond ornament */}
+        <span
+          aria-hidden
+          style={{
+            display: "block",
+            width: 6,
+            height: 6,
+            background: "rgba(30,20,10,0.5)",
+            transform: "rotate(45deg)",
+            flexShrink: 0,
+          }}
+        />
+
+        {/* Right triple-rule */}
+        <div className="flex flex-1 flex-col gap-[3px]">
+          <div style={{ height: 1, background: "linear-gradient(to left, transparent, rgba(255,252,245,0.65))" }} />
+          <div style={{ height: 1, background: "linear-gradient(to left, transparent, rgba(30,20,10,0.55))" }} />
+          <div style={{ height: 1, background: "linear-gradient(to left, transparent, rgba(255,252,245,0.65))" }} />
+        </div>
+      </div>
     </div>
   );
 }

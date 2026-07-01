@@ -26,7 +26,7 @@ export const venues: Venue[] = [
   {
     type: "ceremony",
     name: "Iglesia Ni Cristo Locale of Metro Manila Hills",
-    address: "Q45J+F4C, San Jose, Rodriguez, Rizal",
+    address: "Metro Manila Hills, San Jose, Rodriguez, Rizal",
     date: "2026-07-21",
     timeLabel: "3:00 PM++",
     description:

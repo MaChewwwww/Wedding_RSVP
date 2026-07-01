@@ -22,7 +22,7 @@ export const site = {
     weddingDate: "2026-07-21",
     startTime: "2026-07-21T15:00:00+08:00",
     endTime: "2026-07-21T19:00:00+08:00",
-    location: "Iglesia Ni Cristo Locale of Metro Manila Hills, Rodriguez Rizal",
+    location: "Metro Manila Hills, San Jose, Rodriguez, Rizal",
     timezone: "Asia/Manila",
     // Display-only mirror of the server RSVP_DEADLINE; the server value is
     // authoritative for any mutation decision.
