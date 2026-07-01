@@ -19,6 +19,34 @@ export type PassPanelProps = {
 export function PassPanel({ label, qrDataUrl }: PassPanelProps) {
   const downloadName = `wedding-pass-${label.replace(/\s+/g, "-").toLowerCase()}.png`;
 
+  const handleDownloadQR = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!qrDataUrl) return;
+    
+    try {
+      const res = await fetch(qrDataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], downloadName, { type: "image/png" });
+      
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "Wedding Pass",
+        });
+        return;
+      }
+    } catch (err) {
+      console.warn("Share API failed, falling back to standard download", err);
+    }
+    
+    const link = document.createElement("a");
+    link.href = qrDataUrl;
+    link.download = downloadName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col items-center rounded-lg bg-paper p-6 shadow-sm">
       <p className="font-display text-xl font-semibold text-ink">{label}</p>
@@ -42,13 +70,13 @@ export function PassPanel({ label, qrDataUrl }: PassPanelProps) {
         Present this pass at check-in.
       </p>
       {qrDataUrl && (
-        <a
-          href={qrDataUrl}
-          download={downloadName}
-          className={buttonVariants({ className: "mt-4 w-full" })}
+        <button
+          type="button"
+          onClick={handleDownloadQR}
+          className={buttonVariants({ className: "mt-4 w-full cursor-pointer" })}
         >
           Download QR Pass
-        </a>
+        </button>
       )}
     </div>
   );
