@@ -429,7 +429,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
                 }}
               >
                 <p className="font-sans text-xs sm:text-sm font-semibold tracking-[0.3em] text-blush-deep/90 uppercase">
-                  You are cordially invited
+                  You are cordially invited to
                 </p>
                 <h1 className="font-cursive text-6xl sm:text-7xl text-rose mt-2.5 leading-none drop-shadow-[0_4px_8px_rgba(184,48,74,0.15)] flex justify-center">
                   {titleLetters.map((char, index) => (
