@@ -82,7 +82,7 @@ export function WelcomeSection({ displayName, weddingDate }: { displayName?: str
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.6 }}
-          className="font-display text-2xl font-light tracking-wide text-muted-ink sm:text-3xl"
+          className="font-display text-3xl font-bold tracking-wide text-ink sm:text-4xl"
         >
           Wedding Celebration
         </motion.p>
@@ -92,14 +92,14 @@ export function WelcomeSection({ displayName, weddingDate }: { displayName?: str
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.75 }}
-          className="mt-5 inline-block rounded-full px-6 py-2.5"
+          className="mt-6 inline-block rounded-full px-8 py-3 shadow-md"
           style={{
-            background: "linear-gradient(135deg, rgba(240,168,188,0.3), rgba(181,160,213,0.25))",
-            border: "1px solid rgba(240,168,188,0.35)",
-            backdropFilter: "blur(8px)",
+            background: "linear-gradient(135deg, rgba(240,168,188,0.6), rgba(181,160,213,0.5))",
+            border: "2px solid rgba(255,255,255,0.5)",
+            backdropFilter: "blur(12px)",
           }}
         >
-          <span className="font-display text-lg font-medium text-ink">
+          <span className="font-display text-xl font-bold text-rose-950 tracking-wider">
             {weddingDate || site.event.weddingDate}
           </span>
         </motion.div>
