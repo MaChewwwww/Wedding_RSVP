@@ -206,7 +206,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
             >
               Continue to Wedding Details
             </Button>
-            
+
             {(() => {
               const formatIcsDate = (isoString: string) => {
                 return new Date(isoString).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
@@ -216,7 +216,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
               const eventTitle = `Wedding of ${site.couple.displayName}`;
               const eventDetails = `We can't wait to celebrate with you!\n\nVenue Map: https://maps.app.goo.gl/nYcm1Bf5Ntk8dqP37`;
               const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${icsStart}/${icsEnd}&details=${encodeURIComponent(eventDetails)}&location=${encodeURIComponent(site.event.location)}`;
-              
+
               return (
                 <a
                   href={googleCalendarUrl}
@@ -244,7 +244,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
           transition={{ duration: 0.45 }}
         >
           <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-rose-600/90">
-            Invitation Confirmed
+            Attendance Confirmation
           </p>
           <h3 className="font-display text-xl sm:text-2xl font-bold text-ink tracking-wide">
             RSVP details for {party.guest.fullName}
@@ -275,7 +275,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
               } else {
                 colorClasses = "border-amber-200 text-amber-800 has-[:checked]:border-amber-400 has-[:checked]:bg-amber-100/70 focus-within:ring-amber-300";
               }
-              
+
               return (
                 <label
                   key={choice.value}
@@ -397,14 +397,14 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
         {(selection.status === "invalid" ||
           selection.status === "unconfigured" ||
           selection.status === "error") && (
-          <p role="alert" className="rounded-xl bg-rose/5 border border-rose/15 px-3.5 py-2 text-xs text-rose/90 leading-normal text-center">
-            {selection.status === "invalid"
-              ? "Please pick your name from the list, or search again."
-              : selection.status === "unconfigured"
-                ? "The invitation service isn't available yet."
-                : selection.message}
-          </p>
-        )}
+            <p role="alert" className="rounded-xl bg-rose/5 border border-rose/15 px-3.5 py-2 text-xs text-rose/90 leading-normal text-center">
+              {selection.status === "invalid"
+                ? "Please pick your name from the list, or search again."
+                : selection.status === "unconfigured"
+                  ? "The invitation service isn't available yet."
+                  : selection.message}
+            </p>
+          )}
 
         <div className="space-y-2 pt-1">
           <Button

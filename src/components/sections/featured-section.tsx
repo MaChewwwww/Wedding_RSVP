@@ -40,7 +40,7 @@ export function FeaturedSection() {
       {/* Content */}
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-8 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-2">
         {/* Left — copy */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 mt-[45vh] lg:mt-0">
           <div
             className="rounded-2xl p-6 sm:p-8 w-full max-w-md flex flex-col gap-3"
             style={{
