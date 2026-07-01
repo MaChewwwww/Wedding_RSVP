@@ -34,7 +34,7 @@ export function PlacesSection({ weddingDate }: { weddingDate?: string }) {
             Mark Your Calendar
           </p>
           <h2 className="mt-1 font-cursive text-5xl leading-tight text-gold sm:text-6xl">
-            Places &amp; Venues
+            Time &amp; Venues
           </h2>
         </div>
 
@@ -91,7 +91,7 @@ function Countdown({ weddingDate }: { weddingDate?: string }) {
   React.useEffect(() => {
     const dateToUse = weddingDate || site.event.weddingDate;
     const target = new Date(`${dateToUse}T15:00:00`).getTime();
-    
+
     const calculateTimeLeft = () => {
       const now = new Date().getTime();
       const difference = target - now;

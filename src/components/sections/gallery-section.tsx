@@ -11,7 +11,10 @@ import { Section } from "./section";
   Images live in public/assets/prenup (see scripts/optimize-gallery.ts).
 */
 
-const SLIDES = Array.from({ length: 15 }, (_, i) => ({ n: i + 1, src: `/assets/prenup/${i + 1}.jpg` }));
+const SLIDES = Array.from({ length: 15 }, (_, i) => {
+  const n = 15 - i;
+  return { n, src: `/assets/prenup/${n}.jpg` };
+});
 
 export function GallerySection() {
   const [emblaRef, embla] = useEmblaCarousel({ loop: false, align: "center" });
@@ -56,14 +59,16 @@ export function GallerySection() {
           className="overflow-hidden border-x-2 border-white/50 relative"
           ref={emblaRef}
         >
-          <div className="flex gap-4 sm:gap-6 px-4">
-            {SLIDES.map((s) => (
+          <div className="flex items-center" style={{ touchAction: "pan-y" }}>
+            {SLIDES.map((s, i) => (
               <div
                 key={s.n}
-                className="min-w-0 flex-[0_0_85%] sm:flex-[0_0_60%] lg:flex-[0_0_45%] transition-all duration-500 ease-out py-4"
+                className="relative min-w-0 shrink-0 basis-[85%] sm:basis-[60%] lg:basis-[45%] pl-4 sm:pl-6 transition-all duration-300"
                 style={{
-                  opacity: selected === s.n - 1 ? 1 : 0.5,
-                  transform: selected === s.n - 1 ? "scale(1)" : "scale(0.92)"
+                  opacity: selected === i ? 1 : 0.45,
+                  transform: selected === i ? "scale(1)" : "scale(0.92)",
+                  filter: selected === i ? "none" : "blur(2px)",
+                  zIndex: selected === i ? 10 : 0
                 }}
               >
                 {/* Frame wrapper */}
@@ -72,7 +77,7 @@ export function GallerySection() {
                   style={{
                     background: "#fffdf9",
                     padding: "14px",
-                    boxShadow: selected === s.n - 1
+                    boxShadow: selected === i
                       ? "0 20px 40px -8px rgba(0,0,0,0.2), 0 8px 16px -4px rgba(0,0,0,0.1)"
                       : "0 10px 20px -5px rgba(0,0,0,0.1)",
                     border: "1px solid rgba(0,0,0,0.04)"
@@ -131,19 +136,19 @@ export function GallerySection() {
       </div>
 
       {/* Dot indicators */}
-      <div className="mt-5 flex items-center justify-center gap-2" aria-live="polite" aria-label={`Photo ${selected + 1} of ${SLIDES.length}`}>
-        {SLIDES.map((s) => (
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-2" aria-live="polite" aria-label={`Photo ${selected + 1} of ${SLIDES.length}`}>
+        {SLIDES.map((s, i) => (
           <button
             key={s.n}
             type="button"
             aria-label={`Go to photo ${s.n}`}
-            onClick={() => embla?.scrollTo(s.n - 1)}
+            onClick={() => embla?.scrollTo(i)}
             className="transition-all duration-300"
             style={{
-              width: selected === s.n - 1 ? 24 : 8,
+              width: selected === i ? 24 : 8,
               height: 8,
               borderRadius: 99,
-              background: selected === s.n - 1
+              background: selected === i
                 ? "linear-gradient(to right, #5a9c56, #8fbc8b)"
                 : "rgba(90,156,86,0.3)",
               border: "none",
