@@ -311,7 +311,13 @@ export function GuestsClient({
   const declined = parties.filter((p) => p.rsvp_status === "declined").length;
   const undecided = parties.length - attending - declined;
 
-  const { page, setPage, totalPages, currentData } = useTablePagination(parties, 20);
+  const [filterRsvp, setFilterRsvp] = React.useState("all");
+
+  const filteredParties = React.useMemo(() => {
+    return parties.filter((p) => filterRsvp === "all" || p.rsvp_status === filterRsvp);
+  }, [parties, filterRsvp]);
+
+  const { page, setPage, totalPages, currentData } = useTablePagination(filteredParties, 20);
 
   return (
     <div>
@@ -342,6 +348,16 @@ export function GuestsClient({
             Search
           </Button>
         </form>
+        <Select
+          value={filterRsvp}
+          onChange={(e) => setFilterRsvp(e.target.value)}
+          className="w-[140px] md:w-[160px]"
+        >
+          <option value="all">All RSVPs</option>
+          <option value="attending">Attending</option>
+          <option value="declined">Not attending</option>
+          <option value="pending">Undecided</option>
+        </Select>
         <Button onClick={() => setAddOpen(true)} variant="primary">
           <UserPlus className="h-4 w-4" />
           Add Guest
@@ -386,7 +402,7 @@ export function GuestsClient({
             </tr>
           </TableHead>
           <TableBody>
-            {parties.length === 0 && (
+            {filteredParties.length === 0 && (
               <TableEmpty message="No guests found. Add one to get started." />
             )}
             {currentData.map((party) => (

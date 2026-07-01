@@ -83,7 +83,20 @@ export function AttendanceClient({
   const [updateRsvpTarget, setUpdateRsvpTarget] = React.useState<Row | null>(null);
   const [nameLocked, setNameLocked] = React.useState(true);
 
-  const { page, setPage, totalPages, currentData } = useTablePagination(rows, 20);
+  const [filterRsvp, setFilterRsvp] = React.useState("all");
+  const [filterCheckIn, setFilterCheckIn] = React.useState("all");
+
+  const filteredRows = React.useMemo(() => {
+    return rows.filter((row) => {
+      const matchRsvp = filterRsvp === "all" || row.rsvp_status === filterRsvp;
+      const matchCheckIn =
+        filterCheckIn === "all" ||
+        (filterCheckIn === "checked_in" ? row.checkedIn : !row.checkedIn);
+      return matchRsvp && matchCheckIn;
+    });
+  }, [rows, filterRsvp, filterCheckIn]);
+
+  const { page, setPage, totalPages, currentData } = useTablePagination(filteredRows, 20);
 
   function checkIn(id: string) {
     run(
@@ -145,32 +158,57 @@ export function AttendanceClient({
         </Link>
       </div>
 
-      {/* Search */}
-      <form 
-        className="mb-6 flex max-w-md gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const fd = new FormData(e.currentTarget);
-          const q = fd.get("q") as string;
-          router.push(`?q=${encodeURIComponent(q)}`);
-        }}
-      >
-        <div className="relative flex-1">
-          <Search
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60 z-10"
-            aria-hidden
-          />
-          <Input
-            name="q"
-            defaultValue={search}
-            placeholder="Search guest name…"
-            className="pl-10"
-          />
+      {/* Search & Filters */}
+      <div className="mb-6 flex flex-col md:flex-row flex-wrap gap-3">
+        <form 
+          className="flex flex-1 max-w-md gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const q = fd.get("q") as string;
+            router.push(`?q=${encodeURIComponent(q)}`);
+          }}
+        >
+          <div className="relative flex-1">
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60 z-10"
+              aria-hidden
+            />
+            <Input
+              name="q"
+              defaultValue={search}
+              placeholder="Search guest name…"
+              className="pl-10"
+            />
+          </div>
+          <Button type="submit" variant="outline">
+            Search
+          </Button>
+        </form>
+
+        <div className="flex gap-2">
+          <Select
+            value={filterRsvp}
+            onChange={(e) => setFilterRsvp(e.target.value)}
+            className="w-[140px] md:w-[160px]"
+          >
+            <option value="all">All RSVPs</option>
+            <option value="attending">Attending</option>
+            <option value="declined">Not attending</option>
+            <option value="pending">Undecided</option>
+          </Select>
+
+          <Select
+            value={filterCheckIn}
+            onChange={(e) => setFilterCheckIn(e.target.value)}
+            className="w-[150px] md:w-[170px]"
+          >
+            <option value="all">Check-in: All</option>
+            <option value="checked_in">Checked in</option>
+            <option value="not_checked_in">Not checked in</option>
+          </Select>
         </div>
-        <Button type="submit" variant="outline">
-          Search
-        </Button>
-      </form>
+      </div>
 
       {/* Roster table */}
       <AdminTable>
@@ -185,7 +223,7 @@ export function AttendanceClient({
             </tr>
           </TableHead>
           <TableBody>
-            {rows.length === 0 && <TableEmpty message="No guests found." />}
+            {filteredRows.length === 0 && <TableEmpty message="No guests found." />}
             {currentData.map((row) => (
               <Tr key={row.id}>
                 <Td className="font-medium text-ink">{row.full_name}</Td>
