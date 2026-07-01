@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useRef, useState } from "react";
+import { startTransition, useActionState, useRef, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import {
   checkInAction,
@@ -22,7 +22,16 @@ export function QrScanner() {
   const [state, action, pending] = useActionState(resolveScanAction, initial);
   const [running, setRunning] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
-  const [successSubject, setSuccessSubject] = useState<{ fullName: string; tableName: string | null } | null>(null);
+  
+  // This state controls the popup modal
+  const [scanResult, setScanResult] = useState<{
+    type: "success" | "error" | "already_checked_in";
+    title: string;
+    message?: string;
+    guestName?: string;
+    tableName?: string | null;
+  } | null>(null);
+
   const { pending: checkInPending, run: runCheckIn } = useAdminAction();
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -38,14 +47,53 @@ export function QrScanner() {
         return checkInAction(fd);
       },
       {
-        loading: "Checking in…",
-        success: "Guest checked in",
         onSuccess: () => {
-          setSuccessSubject({ fullName, tableName });
+          setScanResult({
+            type: "success",
+            title: "Check-in Successful",
+            guestName: fullName,
+            tableName: tableName,
+          });
         },
       }
     );
   }
+
+  // Effect to handle state changes from resolveScanAction
+  useEffect(() => {
+    if (state.status === "found") {
+      if (!state.subject.isCheckedIn) {
+        // Automatically check them in
+        onConfirmCheckIn(state.subject.inviteeId, state.subject.fullName, state.subject.tableName);
+      } else {
+        // Already checked in
+        setScanResult({
+          type: "already_checked_in",
+          title: "Already Checked In",
+          guestName: state.subject.fullName,
+          tableName: state.subject.tableName,
+          message: `Checked in at ${state.subject.lastEventAt || "an unknown time"}`,
+        });
+      }
+    } else if (state.status === "invalid" || state.status === "error") {
+      setScanResult({
+        type: "error",
+        title: "Scan Failed",
+        message: state.message,
+      });
+    }
+  }, [state]);
+
+  // Effect to auto-close the modal after 5 seconds
+  useEffect(() => {
+    if (scanResult) {
+      const timer = setTimeout(() => {
+        setScanResult(null);
+        // Start camera again automatically if it was stopped? (Optional, maybe they want to keep scanning)
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [scanResult]);
 
   async function decodeFromFile(file: File) {
     setScannerError(null);
@@ -140,8 +188,8 @@ export function QrScanner() {
           </div>
         )}
         {!running && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <p className="text-sm text-white/60">Camera inactive</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <p className="text-sm font-medium text-white/80">Camera is ready</p>
           </div>
         )}
       </div>
@@ -181,131 +229,63 @@ export function QrScanner() {
         />
       </div>
 
-      {/* Manual token entry */}
-      <div className="px-5 pb-5">
-        <p className="mb-2 text-xs font-medium text-muted-ink">
-          Or paste a token / pass URL manually:
-        </p>
-        <form action={action} className="flex flex-col gap-2 sm:flex-row">
-          <Input
-            name="scan"
-            required
-            placeholder="Paste scanned token or pass URL"
-            className="flex-1"
-          />
-          <Button type="submit" disabled={pending} variant="outline">
-            {pending ? "Validating…" : "Validate"}
-          </Button>
-        </form>
-      </div>
 
-      {/* Error states */}
-      {scannerError && (
-        <div
-          role="alert"
-          className="mx-5 mb-4 flex items-start gap-2 rounded-xl px-4 py-3"
-          style={{ background: "rgba(176,48,80,0.08)", border: "1px solid rgba(176,48,80,0.2)" }}
-        >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden />
-          <p className="text-sm text-danger">{scannerError}</p>
-        </div>
-      )}
-      {(state.status === "invalid" || state.status === "error") && (
-        <div
-          role="alert"
-          className="mx-5 mb-4 flex items-start gap-2 rounded-xl px-4 py-3"
-          style={{ background: "rgba(176,48,80,0.08)", border: "1px solid rgba(176,48,80,0.2)" }}
-        >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden />
-          <p className="text-sm text-danger">{state.message}</p>
-        </div>
-      )}
-
-      {/* Scan result card */}
-      {state.status === "found" && (
-        <div
-          className="mx-5 mb-5 rounded-2xl p-5"
-          style={{
-            background: state.subject.isCheckedIn
-              ? "rgba(90,156,86,0.08)"
-              : "rgba(253,232,240,0.5)",
-            border: state.subject.isCheckedIn
-              ? "1px solid rgba(90,156,86,0.25)"
-              : "1px solid rgba(240,168,188,0.3)",
-          }}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="font-display text-xl font-semibold text-ink">
-                {state.subject.fullName}
-              </p>
-              <p className="mt-0.5 text-sm text-muted-ink">
-                {state.subject.tableName ?? "No table assigned"}
-              </p>
-              <p className="mt-1 text-xs text-muted-ink">
-                {state.subject.isCheckedIn
-                  ? `Already checked in ${state.subject.lastEventAt ?? ""}`
-                  : "Ready to check in"}
-              </p>
-            </div>
-            <Badge variant={state.subject.isCheckedIn ? "success" : "default"}>
-              {state.subject.isCheckedIn ? (
-                <>
-                  <CheckCircle2 className="h-3 w-3" />
-                  Checked in
-                </>
-              ) : (
-                "Pending"
-              )}
-            </Badge>
-          </div>
-          {!state.subject.isCheckedIn && (
-            <div className="mt-4">
-              <Button
-                variant="secondary"
-                size="default"
-                disabled={checkInPending}
-                className="w-full"
-                onClick={() => onConfirmCheckIn(state.subject.inviteeId, state.subject.fullName, state.subject.tableName)}
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                {checkInPending ? "Checking in…" : "Confirm check-in"}
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Success Modal */}
+      {/* Auto-closing Result Modal */}
       <Modal
-        open={successSubject !== null}
-        onClose={() => setSuccessSubject(null)}
-        title="Check-in Successful"
-        description="Guest has been checked in."
+        open={scanResult !== null || checkInPending || pending}
+        onClose={() => {
+          if (!checkInPending && !pending) {
+            setScanResult(null);
+          }
+        }}
+        title={pending || checkInPending ? "Processing..." : scanResult?.title}
       >
-        {successSubject && (
+        {pending || checkInPending ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-sage-light border-t-sage-deep"></div>
+            <p className="mt-4 text-sm font-medium text-muted-ink">Please wait...</p>
+          </div>
+        ) : scanResult && (
           <div className="flex flex-col items-center py-4 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sage-light">
-              <CheckCircle2 className="h-8 w-8 text-sage-deep" />
+            <div
+              className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
+                scanResult.type === "success" || scanResult.type === "already_checked_in"
+                  ? "bg-sage-light"
+                  : "bg-rose/20"
+              }`}
+            >
+              {scanResult.type === "success" || scanResult.type === "already_checked_in" ? (
+                <CheckCircle2 className="h-8 w-8 text-sage-deep" />
+              ) : (
+                <AlertCircle className="h-8 w-8 text-danger" />
+              )}
             </div>
-            <p className="text-2xl font-display font-semibold text-ink">
-              {successSubject.fullName}
-            </p>
-            <div className="mt-4 w-full rounded-xl border border-sage-light bg-[rgba(90,156,86,0.05)] px-6 py-4">
-              <p className="text-sm font-medium text-muted-ink">Table Assignment</p>
-              <p className="mt-1 text-4xl font-bold text-sage-deep">
-                {successSubject.tableName ?? "No Table"}
-              </p>
-            </div>
+            
+            {scanResult.guestName ? (
+              <>
+                <p className="text-2xl font-display font-semibold text-ink">
+                  {scanResult.guestName}
+                </p>
+                {scanResult.message && (
+                  <p className="mt-2 text-sm text-muted-ink">{scanResult.message}</p>
+                )}
+                <div className="mt-4 w-full rounded-xl border border-sage-light bg-[rgba(90,156,86,0.05)] px-6 py-4">
+                  <p className="text-sm font-medium text-muted-ink">Table Assignment</p>
+                  <p className="mt-1 text-4xl font-bold text-sage-deep">
+                    {scanResult.tableName ?? "No Table"}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="text-lg font-medium text-danger">{scanResult.message}</p>
+            )}
+
             <Button
               className="mt-6 w-full"
               variant="primary"
-              onClick={() => {
-                setSuccessSubject(null);
-                // To reset scanner, we can just let them scan again
-              }}
+              onClick={() => setScanResult(null)}
             >
-              Done / Scan Next Guest
+              Close
             </Button>
           </div>
         )}

@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeName } from "./normalize";
+import { trigramSimilarity } from "./score";
 
 /*
   Candidate retrieval (docs/architecture.md step 3). Behind an interface so the
@@ -77,21 +78,46 @@ export function createMatchRepository(): MatchRepository {
 
     async findFuzzy(normalized, limit) {
       if (!db) return [];
-      // Prefer a SECURITY DEFINER RPC that runs similarity() server-side and is
-      // not exposed to anon. Falls back to empty if the RPC is absent.
       const { data, error } = await db.rpc("match_invitees", {
         query: normalized,
         match_limit: limit,
       });
-      if (error || !data) return [];
-      return (data as RpcRow[]).map((r) => ({
-        partyId: r.party_id,
-        inviteeId: r.invitee_id,
-        normalizedName: r.normalized_name,
-        isActive: r.is_active,
-        partyActive: r.party_status === "active",
-        dbSimilarity: r.similarity,
-      }));
+      if (!error && data && data.length > 0) {
+        return (data as RpcRow[]).map((r) => ({
+          partyId: r.party_id,
+          inviteeId: r.invitee_id,
+          normalizedName: r.normalized_name,
+          isActive: r.is_active,
+          partyActive: r.party_status === "active",
+          dbSimilarity: r.similarity,
+        }));
+      }
+
+      // Fallback: If RPC fails (e.g. pg_trgm missing) or returns empty, do local JS scoring.
+      // A wedding has ~200 guests so fetching all active names is extremely fast.
+      const { data: allGuests } = await db
+        .from("invitees")
+        .select("id, party_id, normalized_name, is_active, invitation_parties!inner(status)")
+        .eq("is_active", true);
+        
+      if (!allGuests) return [];
+
+      const scored = allGuests.map((row) => {
+        const party = Array.isArray(row.invitation_parties) ? row.invitation_parties[0] : row.invitation_parties;
+        return {
+          partyId: row.party_id,
+          inviteeId: row.id,
+          normalizedName: row.normalized_name,
+          isActive: row.is_active,
+          partyActive: party?.status === "active",
+          dbSimilarity: trigramSimilarity(normalized, row.normalized_name),
+        };
+      });
+
+      return scored
+        .filter((c) => c.dbSimilarity > 0.3)
+        .sort((a, b) => b.dbSimilarity - a.dbSimilarity)
+        .slice(0, limit);
     },
 
 

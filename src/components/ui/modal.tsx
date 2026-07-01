@@ -62,7 +62,7 @@ export function Modal({
       {/* Panel */}
       <div
         className={cn(
-          "relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border border-blush/30 bg-paper shadow-xl",
+          "relative z-10 w-full max-w-lg overflow-visible rounded-2xl border border-blush/30 bg-paper shadow-xl",
           className,
         )}
         style={{ boxShadow: "0 18px 50px rgba(60,30,20,0.18)" }}

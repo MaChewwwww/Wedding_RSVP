@@ -11,6 +11,7 @@ import {
   UserPlus,
   X,
   Armchair,
+  Search,
 } from "lucide-react";
 import {
   assignTableAction,
@@ -40,23 +41,27 @@ type Guest = {
   full_name: string;
   rsvp_status: string;
   table_id: string | null;
+  is_checked_in: boolean;
 };
 
-function statusColor(status: string) {
-  if (status === "attending") return "#5a9c56";
+function statusColor(status: string, isCheckedIn: boolean) {
+  if (status === "attending") {
+    return isCheckedIn ? "#5a9c56" : "#c8963c"; // Green if checked in, Yellow if not
+  }
   if (status === "declined") return "#d4516e";
   return "#c8963c";
 }
 
-/* Round-table seat visualization: filled + empty chairs around an arc. */
 function SeatRing({
   capacity,
   assigned,
+  colors,
 }: {
   capacity: number;
   assigned: number;
+  colors: string[];
 }) {
-  const seats = Array.from({ length: Math.min(capacity, 14) }, (_, i) => i < assigned);
+  const seats = Array.from({ length: Math.min(capacity, 14) }, (_, i) => colors[i] || null);
   const radius = 46;
   const cx = 60;
   const cy = 60;
@@ -74,7 +79,7 @@ function SeatRing({
       >
         {assigned}/{capacity}
       </text>
-      {seats.map((filled, i) => {
+      {seats.map((seatColor, i) => {
         const angle = (i / seats.length) * 2 * Math.PI - Math.PI / 2;
         const x = cx + radius * Math.cos(angle);
         const y = cy + radius * Math.sin(angle);
@@ -84,8 +89,8 @@ function SeatRing({
             cx={x}
             cy={y}
             r={6}
-            fill={filled ? "#5a9c56" : "#fde8f0"}
-            stroke={filled ? "#5a9c56" : "#f0a8bc"}
+            fill={seatColor ? seatColor : "#fde8f0"}
+            stroke={seatColor ? seatColor : "#f0a8bc"}
             strokeWidth={1.5}
           />
         );
@@ -142,7 +147,7 @@ function TableCard({
       {/* Body: seat ring + guest preview */}
       <div className="flex gap-4 px-5 py-4">
         <div className="shrink-0">
-          <SeatRing capacity={table.capacity} assigned={table.assigned} />
+          <SeatRing capacity={table.capacity} assigned={table.assigned} colors={guests.map((g) => statusColor(g.rsvp_status, g.is_checked_in))} />
         </div>
         <div className="min-w-0 flex-1">
           {guests.length === 0 ? (
@@ -158,7 +163,7 @@ function TableCard({
                 >
                   <span
                     className="h-1.5 w-1.5 shrink-0 rounded-full"
-                    style={{ background: statusColor(g.rsvp_status) }}
+                    style={{ background: statusColor(g.rsvp_status, g.is_checked_in) }}
                   />
                   <span className="truncate">{g.full_name}</span>
                 </li>
@@ -176,8 +181,8 @@ function TableCard({
       {/* Actions */}
       <div className="mt-auto flex items-center gap-1.5 border-t border-blush/15 px-4 py-3">
         <Button onClick={onManage} size="sm" variant="primary" className="flex-1">
-          <Settings2 className="h-4 w-4" />
-          Manage
+          <Settings2 className="mr-1.5 h-3.5 w-3.5" />
+          Assign Guests
         </Button>
         <Button
           onClick={onEdit}
@@ -201,6 +206,75 @@ function TableCard({
         </Button>
       </div>
     </article>
+  );
+}
+
+function GuestSearchCombobox({ guests }: { guests: Guest[] }) {
+  const [search, setSearch] = React.useState("");
+  const [open, setOpen] = React.useState(false);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+
+  // Close when clicking outside
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = guests.filter((g) =>
+    g.full_name.toLowerCase().includes(search.toLowerCase())
+  );
+  
+  // To avoid submitting a non-existent guest, require a perfect match for the hidden input
+  const selected = guests.find((g) => g.full_name === search);
+
+  return (
+    <div className="flex-1 relative" ref={wrapperRef}>
+      <Search
+        className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60 z-10"
+        aria-hidden
+      />
+      <input type="hidden" name="inviteeId" value={selected?.id ?? ""} />
+      <Input
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        placeholder="Search for a guest to assign…"
+        required
+        autoComplete="off"
+        className="w-full pl-10 bg-white"
+      />
+      {open && (
+        <div className="absolute top-full left-0 mt-1 w-full max-h-60 overflow-y-auto bg-white rounded-lg border border-blush/30 shadow-xl z-50 py-1">
+          {filtered.length === 0 ? (
+            <div className="px-4 py-3 text-sm text-muted-ink text-center">
+              No guests found.
+            </div>
+          ) : (
+            filtered.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                className="w-full text-left px-4 py-2 text-sm text-ink hover:bg-blush-light transition-colors"
+                onClick={() => {
+                  setSearch(g.full_name);
+                  setOpen(false);
+                }}
+              >
+                {g.full_name}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -386,7 +460,7 @@ export function TablesClient({
                       <span className="flex items-center gap-2 text-sm text-ink">
                         <span
                           className="h-1.5 w-1.5 rounded-full"
-                          style={{ background: statusColor(g.rsvp_status) }}
+                          style={{ background: statusColor(g.rsvp_status, g.is_checked_in) }}
                         />
                         {g.full_name}
                       </span>
@@ -423,25 +497,18 @@ export function TablesClient({
                   <UserPlus className="h-3.5 w-3.5" /> Seat a guest
                 </h4>
                 <form
-                  action={(fd) =>
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.currentTarget);
                     run(() => assignTableAction(fd), {
                       loading: "Seating guest…",
                       success: "Guest seated",
-                    })
-                  }
+                    });
+                  }}
                   className="flex gap-2"
                 >
                   <input type="hidden" name="tableId" value={manageTable.table_id} />
-                  <Select name="inviteeId" required defaultValue="" className="flex-1">
-                    <option value="" disabled>
-                      Choose a guest…
-                    </option>
-                    {unseated.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.full_name}
-                      </option>
-                    ))}
-                  </Select>
+                  <GuestSearchCombobox guests={unseated} />
                   <Button type="submit" disabled={pending} variant="secondary">
                     Seat
                   </Button>

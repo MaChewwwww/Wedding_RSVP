@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   UserPlus,
   Upload,
@@ -12,6 +13,8 @@ import {
   Mail,
   Users,
   Edit,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import {
   adminRsvpOverrideAction,
@@ -39,6 +42,8 @@ import {
   Tr,
   Td,
   TableEmpty,
+  useTablePagination,
+  TablePagination,
 } from "@/components/admin/admin-table";
 
 type Invitee = {
@@ -78,6 +83,7 @@ function GuestRow({ party }: { party: Party }) {
   const { pending, run } = useAdminAction();
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [updateOpen, setUpdateOpen] = React.useState(false);
+  const [nameLocked, setNameLocked] = React.useState(true);
 
   if (!guest) return null;
 
@@ -225,6 +231,42 @@ function GuestRow({ party }: { party: Party }) {
               ))}
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-ink">Guest Name</label>
+            <div className="flex gap-2">
+              <Input
+                name="fullName"
+                type="text"
+                defaultValue={guest.full_name}
+                disabled={nameLocked}
+                className="w-full"
+                required
+                minLength={2}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setNameLocked(!nameLocked)}
+                className="shrink-0 text-muted-ink"
+                title={nameLocked ? "Unlock to edit" : "Lock"}
+              >
+                {nameLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-ink">Email</label>
+            <Input
+              name="email"
+              type="email"
+              defaultValue={party.email || ""}
+              placeholder="e.g. guest@example.com (optional)"
+              className="w-full"
+            />
+          </div>
           
           <div className="flex items-center gap-2">
             <input
@@ -261,6 +303,7 @@ export function GuestsClient({
   parties: Party[];
   search: string;
 }) {
+  const router = useRouter();
   const [addOpen, setAddOpen] = React.useState(false);
   const [bulkOpen, setBulkOpen] = React.useState(false);
 
@@ -268,21 +311,36 @@ export function GuestsClient({
   const declined = parties.filter((p) => p.rsvp_status === "declined").length;
   const undecided = parties.length - attending - declined;
 
+  const { page, setPage, totalPages, currentData } = useTablePagination(parties, 20);
+
   return (
     <div>
       {/* Toolbar */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <form className="relative min-w-[16rem] flex-1 max-w-md">
-          <Search
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60"
-            aria-hidden
-          />
-          <Input
-            name="q"
-            defaultValue={search}
-            placeholder="Search guests by name or email…"
-            className="pl-10"
-          />
+        <form 
+          className="relative min-w-[16rem] flex-1 max-w-md flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const q = fd.get("q") as string;
+            router.push(`?q=${encodeURIComponent(q)}`);
+          }}
+        >
+          <div className="relative flex-1">
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60 z-10"
+              aria-hidden
+            />
+            <Input
+              name="q"
+              defaultValue={search}
+              placeholder="Search guests by name or email…"
+              className="pl-10 w-full"
+            />
+          </div>
+          <Button type="submit" variant="outline">
+            Search
+          </Button>
         </form>
         <Button onClick={() => setAddOpen(true)} variant="primary">
           <UserPlus className="h-4 w-4" />
@@ -331,11 +389,12 @@ export function GuestsClient({
             {parties.length === 0 && (
               <TableEmpty message="No guests found. Add one to get started." />
             )}
-            {parties.map((party) => (
+            {currentData.map((party) => (
               <GuestRow key={party.id} party={party} />
             ))}
           </TableBody>
         </Table>
+        <TablePagination page={page} totalPages={totalPages} setPage={setPage} />
       </AdminTable>
 
       {/* Add Guest modal */}
@@ -353,7 +412,7 @@ export function GuestsClient({
         open={bulkOpen}
         onClose={() => setBulkOpen(false)}
         title="Bulk Add Guests"
-        description="Paste CSV with a full_name column (email optional)."
+        description="Add guests one per line. Format: Name, Email (email is optional)"
       >
         <ImportGuestsForm onDone={() => setBulkOpen(false)} />
       </Modal>

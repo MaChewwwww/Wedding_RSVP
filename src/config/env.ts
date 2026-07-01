@@ -44,9 +44,9 @@ const isoWithOffset = z
 
 const serverSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
-  RESEND_API_KEY: z.string().min(1).optional(),
-  RESEND_FROM_EMAIL: z.string().email().optional(),
-  RESEND_WEBHOOK_SECRET: z.string().min(1).optional(),
+  BREVO_API_KEY: z.string().min(1).optional(),
+  BREVO_FROM_EMAIL: z.string().email().optional(),
+  BREVO_WEBHOOK_SECRET: z.string().min(1).optional(),
   GUEST_SESSION_SECRET: z.string().min(16).optional(),
   QR_TOKEN_PEPPER: z.string().min(16).optional(),
   QR_TOKEN_ENCRYPTION_KEY: z.string().min(43).optional(),

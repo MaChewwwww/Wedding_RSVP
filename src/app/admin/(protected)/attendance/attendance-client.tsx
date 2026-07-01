@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   QrCode,
   Search,
@@ -12,14 +13,18 @@ import {
   AlertCircle,
   Eye,
   XCircle,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { site } from "@/config/site";
 import { checkInAction, reverseCheckInAction } from "./actions";
+import { adminRsvpOverrideAction } from "@/app/admin/(protected)/guests/actions";
 import { useAdminAction } from "@/components/admin/use-admin-action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Modal } from "@/components/ui/modal";
 import {
   AdminTable,
@@ -30,6 +35,8 @@ import {
   Tr,
   Td,
   TableEmpty,
+  useTablePagination,
+  TablePagination,
 } from "@/components/admin/admin-table";
 
 type Row = {
@@ -69,9 +76,14 @@ export function AttendanceClient({
   search: string;
   checkedInCount: number;
 }) {
+  const router = useRouter();
   const { pending, run } = useAdminAction();
   const [reverseTarget, setReverseTarget] = React.useState<Row | null>(null);
   const [viewTarget, setViewTarget] = React.useState<Row | null>(null);
+  const [updateRsvpTarget, setUpdateRsvpTarget] = React.useState<Row | null>(null);
+  const [nameLocked, setNameLocked] = React.useState(true);
+
+  const { page, setPage, totalPages, currentData } = useTablePagination(rows, 20);
 
   function checkIn(id: string) {
     run(
@@ -134,10 +146,18 @@ export function AttendanceClient({
       </div>
 
       {/* Search */}
-      <form className="mb-6 flex max-w-md gap-2">
+      <form 
+        className="mb-6 flex max-w-md gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          const q = fd.get("q") as string;
+          router.push(`?q=${encodeURIComponent(q)}`);
+        }}
+      >
         <div className="relative flex-1">
           <Search
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60"
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-ink/60 z-10"
             aria-hidden
           />
           <Input
@@ -166,7 +186,7 @@ export function AttendanceClient({
           </TableHead>
           <TableBody>
             {rows.length === 0 && <TableEmpty message="No guests found." />}
-            {rows.map((row) => (
+            {currentData.map((row) => (
               <Tr key={row.id}>
                 <Td className="font-medium text-ink">{row.full_name}</Td>
                 <Td className="hidden md:table-cell text-muted-ink">
@@ -208,7 +228,7 @@ export function AttendanceClient({
                         <Undo2 className="h-3.5 w-3.5 md:mr-1.5" />
                         <span className="hidden md:inline">Reverse</span>
                       </Button>
-                    ) : (
+                    ) : row.rsvp_status === "attending" ? (
                       <Button
                         onClick={() => checkIn(row.id)}
                         disabled={pending}
@@ -219,6 +239,19 @@ export function AttendanceClient({
                         <Check className="h-3.5 w-3.5 md:mr-1.5" />
                         <span className="hidden md:inline">Check in</span>
                       </Button>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          setUpdateRsvpTarget(row);
+                          setNameLocked(true);
+                        }}
+                        disabled={pending}
+                        size="sm"
+                        variant="secondary"
+                        className="h-8 shrink-0 px-2 md:h-9 md:px-3 whitespace-nowrap bg-butter-deep text-white hover:bg-butter-deep/90 border-transparent"
+                      >
+                        Update RSVP
+                      </Button>
                     )}
                   </div>
                 </Td>
@@ -226,6 +259,7 @@ export function AttendanceClient({
             ))}
           </TableBody>
         </Table>
+        <TablePagination page={page} totalPages={totalPages} setPage={setPage} />
       </AdminTable>
 
       {/* View details modal */}
@@ -278,7 +312,7 @@ export function AttendanceClient({
                   <Undo2 className="h-3.5 w-3.5 mr-1.5" />
                   Reverse check-in
                 </Button>
-              ) : (
+              ) : viewTarget.rsvp_status === "attending" ? (
                 <Button
                   onClick={() => {
                     setViewTarget(null);
@@ -289,6 +323,19 @@ export function AttendanceClient({
                 >
                   <Check className="h-3.5 w-3.5 mr-1.5" />
                   Check in
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    setViewTarget(null);
+                    setUpdateRsvpTarget(viewTarget);
+                    setNameLocked(true);
+                  }}
+                  variant="secondary"
+                  size="sm"
+                  className="bg-butter-deep text-white hover:bg-butter-deep/90 border-transparent"
+                >
+                  Update RSVP
                 </Button>
               )}
             </div>
@@ -337,6 +384,75 @@ export function AttendanceClient({
               </Button>
               <Button type="submit" variant="danger" size="sm" disabled={pending}>
                 {pending ? "Reversing…" : "Reverse check-in"}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* Update RSVP modal */}
+      <Modal
+        open={updateRsvpTarget !== null}
+        onClose={() => setUpdateRsvpTarget(null)}
+        title="Update RSVP Status"
+        description={`Manually update RSVP status for ${updateRsvpTarget?.full_name}.`}
+      >
+        {updateRsvpTarget && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              fd.set("inviteeId", updateRsvpTarget.id);
+              fd.set("reason", "Manual status update at door");
+              const newStatus = fd.get("status") as string;
+              run(() => adminRsvpOverrideAction(fd), {
+                loading: "Updating status…",
+                success: `Status updated`,
+                onSuccess: () => setUpdateRsvpTarget(null),
+              });
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-ink">Status</label>
+              <Select name="status" defaultValue={updateRsvpTarget.rsvp_status} className="w-full">
+                <option value="pending">Undecided</option>
+                <option value="attending">Attending</option>
+                <option value="declined">Not attending</option>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-ink">Guest Name</label>
+              <div className="flex gap-2">
+                <Input
+                  name="fullName"
+                  type="text"
+                  defaultValue={updateRsvpTarget.full_name}
+                  disabled={nameLocked}
+                  className="w-full"
+                  required
+                  minLength={2}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setNameLocked(!nameLocked)}
+                  className="shrink-0 text-muted-ink"
+                  title={nameLocked ? "Unlock to edit" : "Lock"}
+                >
+                  {nameLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="ghost" onClick={() => setUpdateRsvpTarget(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" disabled={pending}>
+                Save Changes
               </Button>
             </div>
           </form>

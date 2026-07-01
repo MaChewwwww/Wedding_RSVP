@@ -107,7 +107,19 @@ export async function loadTableAdminData() {
     ...t,
     location_note: locationById.get(t.table_id) ?? null,
   }));
-  return { tables: tablesWithLocation, guests: guests.data ?? [] };
+  const { data: attData } = await db
+    .from("invitee_attendance_current")
+    .select("invitee_id, is_checked_in");
+  const checkedInMap = new Map((attData ?? []).map((a) => [a.invitee_id, a.is_checked_in]));
+
+  const guestsMapped = (guests.data ?? []).map((g: any) => ({
+    id: g.id,
+    full_name: g.full_name,
+    rsvp_status: g.rsvp_status,
+    table_id: g.table_id,
+    is_checked_in: checkedInMap.get(g.id) ?? false,
+  }));
+  return { tables: tablesWithLocation, guests: guestsMapped };
 }
 
 export async function loadAttendanceRoster(search?: string) {

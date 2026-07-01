@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
+import { Download } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   searchInvitationsAction,
@@ -46,6 +47,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
   const [searchedName, setSearchedName] = React.useState("");
   const [party, setParty] = React.useState<PartyView | null>(null);
   const [passes, setPasses] = React.useState<PassView[]>([]);
+  const [attendanceState, setAttendanceState] = React.useState<string>("undecided");
 
   React.useEffect(() => {
     if (env && !env.opened) {
@@ -89,6 +91,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
       getPartyAction().then((p) => {
         if (p) {
           setParty(p);
+          setAttendanceState(p.guest.rsvpStatus === "pending" ? "undecided" : p.guest.rsvpStatus);
           setStage("rsvp");
         } else {
           setStage("lookup");
@@ -181,9 +184,10 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
                 <a
                   href={passes[0].qrDataUrl}
                   download={`wedding-pass-${party?.guest.fullName.replace(/\s+/g, "-").toLowerCase()}.png`}
-                  className="mt-2 w-full h-10 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-sm font-semibold tracking-[0.1em] text-[10px] uppercase transition-all duration-200 flex items-center justify-center"
+                  className="mt-2 w-10 h-10 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-sm transition-all duration-200 flex items-center justify-center mx-auto"
+                  title="Download QR Pass"
                 >
-                  Download QR Pass
+                  <Download className="w-4 h-4" />
                 </a>
               )}
             </div>
@@ -195,12 +199,36 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.3 }}
         >
-          <Button
-            onClick={() => router.push("/celebration")}
-            className="w-full h-12 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-950/20 hover:shadow-lg hover:shadow-rose-950/30 font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200"
-          >
-            Continue to Wedding Details
-          </Button>
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={() => router.push("/celebration")}
+              className="w-full h-12 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-950/20 hover:shadow-lg hover:shadow-rose-950/30 font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200"
+            >
+              Continue to Wedding Details
+            </Button>
+            
+            {(() => {
+              const formatIcsDate = (isoString: string) => {
+                return new Date(isoString).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+              };
+              const icsStart = formatIcsDate(site.event.startTime);
+              const icsEnd = formatIcsDate(site.event.endTime);
+              const eventTitle = `Wedding of ${site.couple.displayName}`;
+              const eventDetails = `We can't wait to celebrate with you!\n\nVenue Map: https://maps.app.goo.gl/nYcm1Bf5Ntk8dqP37`;
+              const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${icsStart}/${icsEnd}&details=${encodeURIComponent(eventDetails)}&location=${encodeURIComponent(site.event.location)}`;
+              
+              return (
+                <a
+                  href={googleCalendarUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-12 rounded-full border-2 border-rose-400 text-rose-500 hover:bg-rose-50 hover:border-rose-500 hover:text-rose-600 shadow-sm font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200 flex items-center justify-center"
+                >
+                  Add to Google Calendar
+                </a>
+              );
+            })()}
+          </div>
         </motion.div>
       </div>
     );
@@ -238,25 +266,33 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
             aria-label={`Attendance for ${party.guest.fullName}`}
             className="flex gap-2"
           >
-            {CHOICES.map((choice) => (
-              <label
-                key={choice.value}
-                className="flex-1 flex min-h-12 cursor-pointer items-center justify-center gap-1.5 rounded-full border-4 border-rose-200 bg-white/80 px-2 py-1 text-xs font-semibold text-rose-800 transition-all duration-200 has-[:checked]:border-rose-400 has-[:checked]:bg-rose-100/70 focus-within:ring-2 focus-within:ring-rose-300"
-              >
-                <input
-                  type="radio"
-                  name={`attendance:${party.guest.id}`}
-                  value={choice.value}
-                  defaultChecked={
-                    party.guest.rsvpStatus === choice.value ||
-                    (party.guest.rsvpStatus === "pending" &&
-                      choice.value === "undecided")
-                  }
-                  className="accent-rose-500"
-                />
-                <span>{choice.label}</span>
-              </label>
-            ))}
+            {CHOICES.map((choice) => {
+              let colorClasses = "";
+              if (choice.value === "attending") {
+                colorClasses = "border-emerald-200 text-emerald-800 has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-100/70 focus-within:ring-emerald-300";
+              } else if (choice.value === "declined") {
+                colorClasses = "border-rose-200 text-rose-800 has-[:checked]:border-rose-400 has-[:checked]:bg-rose-100/70 focus-within:ring-rose-300";
+              } else {
+                colorClasses = "border-amber-200 text-amber-800 has-[:checked]:border-amber-400 has-[:checked]:bg-amber-100/70 focus-within:ring-amber-300";
+              }
+              
+              return (
+                <label
+                  key={choice.value}
+                  className={`flex-1 flex min-h-12 cursor-pointer items-center justify-center gap-1.5 rounded-full border-4 bg-white/80 px-2 py-1 text-xs font-semibold transition-all duration-200 focus-within:ring-2 ${colorClasses}`}
+                >
+                  <input
+                    type="radio"
+                    name={`attendance:${party.guest.id}`}
+                    value={choice.value}
+                    checked={attendanceState === choice.value}
+                    onChange={(e) => setAttendanceState(e.target.value)}
+                    className="sr-only"
+                  />
+                  <span className="text-center">{choice.label}</span>
+                </label>
+              );
+            })}
           </div>
         </motion.fieldset>
 
@@ -280,7 +316,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
             disabled={rsvpPending}
             className="h-12 text-center text-base px-4 bg-gradient-to-b from-white to-rose-50/40 border-4 border-rose-300 rounded-full focus:bg-rose-50/30 focus:border-rose-400 focus:ring-2 focus:ring-rose-400/50 transition-all duration-200 text-ink placeholder:text-muted-ink/65"
           />
-          <p className="text-[10px] text-center text-rose-600 font-semibold leading-normal">
+          <p className="text-[10px] text-center text-emerald-600 font-semibold leading-normal">
             The QR code invitation will be sent here.
           </p>
         </motion.div>

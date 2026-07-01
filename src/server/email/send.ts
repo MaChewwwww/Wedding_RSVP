@@ -1,10 +1,12 @@
 import "server-only";
-import { Resend } from "resend";
+import { render } from "@react-email/render";
 import { createHash } from "node:crypto";
 import { serverEnv, env } from "@/config/env";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { logger } from "@/lib/logger";
+import { site } from "@/config/site";
 import { PassEmail } from "./pass-email";
+import { logger } from "@/lib/logger";
+import axios from "axios";
 
 /*
   Email delivery via Resend (docs/architecture.md "Email architecture",
@@ -42,12 +44,22 @@ export async function queuePassEmail(
 ): Promise<QueuePassEmailResult> {
   const cfg = serverEnv();
   if (!cfg.ENABLE_EMAIL_DELIVERY) {
+    logger.info("email_send_skipped", { reason: "Email delivery is disabled.", partyId: args.partyId });
     return { ok: false, reason: "Email delivery is disabled." };
   }
-  const apiKey = cfg.RESEND_API_KEY;
-  const from = cfg.RESEND_FROM_EMAIL;
+  
+  const apiKey = cfg.BREVO_API_KEY;
+  const from = cfg.BREVO_FROM_EMAIL;
   const db = createAdminClient();
+  
   if (!apiKey || !from || !db) {
+    logger.warn("email_send_skipped", { 
+      reason: "Email backend not configured.", 
+      hasApiKey: !!apiKey, 
+      hasFrom: !!from, 
+      hasDb: !!db,
+      partyId: args.partyId
+    });
     return { ok: false, reason: "Email backend not configured." };
   }
 
@@ -150,28 +162,97 @@ export async function queuePassEmail(
       },
       { onConflict: "idempotency_key", ignoreDuplicates: false },
     )
-    .select("id")
+    .select("id, status")
     .single();
   if (insertErr || !delivery) {
-    return { ok: false, reason: "Could not record delivery." };
+    logger.warn("email_send_skipped", { reason: "Could not create delivery record.", error: insertErr, partyId: args.partyId });
+    return { ok: false, reason: "Could not create delivery record." };
+  }
+
+  if (delivery.status === "sent") {
+    logger.info("email_send_skipped", { reason: "Email already sent.", partyId: args.partyId });
+    return { ok: false, reason: "Email already sent." };
   }
 
   const passUrl = `${env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}/pass`;
-  const resend = new Resend(apiKey);
+  
+  let senderName: string = site.couple.displayName;
+  let senderEmail = from;
+  const fromMatch = from.match(/^(.*)<(.+)>$/);
+  if (fromMatch) {
+    senderName = fromMatch[1].trim() || site.couple.displayName;
+    senderEmail = fromMatch[2].trim();
+  }
+
+  const brevoAttachments = attachments.map((a) => ({
+    name: a.filename,
+    content: a.content.toString("base64"),
+  }));
+
+  // --- Calendar Integration ---
+  const formatIcsDate = (isoString: string) => {
+    return new Date(isoString).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  };
+  const icsStart = formatIcsDate(site.event.startTime);
+  const icsEnd = formatIcsDate(site.event.endTime);
+  const eventTitle = `Wedding of ${site.couple.displayName}`;
+  const eventDetails = `We can't wait to celebrate with you! 
+View your wedding pass here: ${passUrl}
+
+Venue Map: https://maps.app.goo.gl/nYcm1Bf5Ntk8dqP37`;
+  
+  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${icsStart}/${icsEnd}&details=${encodeURIComponent(eventDetails)}&location=${encodeURIComponent(site.event.location)}`;
+
+  const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Wedding RSVP//EN
+BEGIN:VEVENT
+DTSTAMP:${formatIcsDate(new Date().toISOString())}
+DTSTART:${icsStart}
+DTEND:${icsEnd}
+SUMMARY:${eventTitle}
+DESCRIPTION:${eventDetails.replace(/\n/g, '\\n')}
+LOCATION:${site.event.location}
+URL:${passUrl}
+END:VEVENT
+END:VCALENDAR`;
+
+  brevoAttachments.push({
+    name: "invite.ics",
+    content: Buffer.from(icsContent).toString("base64"),
+  });
+  // ----------------------------
 
   try {
-    const { data: sent, error } = await resend.emails.send({
-      from,
-      to: args.email,
-      subject: "Your wedding pass",
-      react: PassEmail({ partyName, passUrl, passes: passesWithUrls }),
-      attachments: attachments.length > 0 ? attachments : undefined,
-    });
-    if (error) throw new Error(error.message);
+    const htmlContent = await render(
+      PassEmail({ partyName, passUrl, googleCalendarUrl, passes: passesWithUrls }),
+    );
+
+    const res = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: args.email }],
+        subject: "Your Wedding Pass",
+        htmlContent,
+        attachment: brevoAttachments.length > 0 ? brevoAttachments : undefined,
+      },
+      {
+        headers: {
+          "api-key": apiKey.trim(),
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "User-Agent": "Wedding-RSVP-App/1.0",
+        },
+        timeout: 15000,
+      }
+    );
+
+    const sent = res.data;
 
     await db
       .from("email_deliveries")
-      .update({ status: "sent", provider_message_id: sent?.id ?? null })
+      .update({ status: "sent", provider_message_id: sent?.messageId ?? null })
       .eq("id", delivery.id);
 
     logger.info("email_sent", {
@@ -180,14 +261,25 @@ export async function queuePassEmail(
     });
     return { ok: true, deliveryId: delivery.id };
   } catch (err) {
+    let errorMessage = "unknown";
+    if (axios.isAxiosError(err)) {
+      errorMessage = err.response?.data ? `Brevo API error: ${err.response.status} ${JSON.stringify(err.response.data)}` : err.message;
+    } else if (err instanceof Error) {
+      errorMessage = err.cause ? `${err.message} (${String(err.cause)})` : err.message;
+    }
+
     await db
       .from("email_deliveries")
       .update({
         status: "failed",
-        error_code: err instanceof Error ? err.message.slice(0, 120) : "unknown",
+        error_code: errorMessage.slice(0, 120),
       })
       .eq("id", delivery.id);
-    logger.error("email_send_failed", { requestId: args.requestId });
+    
+    logger.error("email_send_failed", { 
+      requestId: args.requestId,
+      error: errorMessage,
+    });
     return { ok: false, reason: "Email send failed." };
   }
 }
