@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans, Great_Vibes } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { site } from "@/config/site";
+import { GlobalAudio } from "@/components/ui/global-audio";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -41,6 +42,7 @@ export default function RootLayout({
       className={`${display.variable} ${body.variable} ${cursive.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-paper text-ink">
+        <GlobalAudio />
         {children}
         <Analytics />
       </body>
