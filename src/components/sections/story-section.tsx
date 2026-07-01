@@ -41,79 +41,45 @@ export function StorySection() {
         </div>
       </div>
 
-      {/* Timeline Section */}
-      <div className="relative mt-16 max-w-5xl mx-auto px-4 sm:px-6">
-        {/* Central Vertical Axis */}
-        <div 
-          className="absolute left-[39px] md:left-1/2 top-4 bottom-4 w-px md:-translate-x-1/2"
-          style={{ 
-            background: "linear-gradient(to bottom, transparent, rgba(181,160,213,0.6) 5%, rgba(212,81,110,0.6) 95%, transparent)"
-          }} 
-        />
-
-        <div className="relative flex flex-col gap-16 md:gap-24">
-          {PHOTOS.map((photo, i) => {
-            const isRightSide = i % 2 === 0; // 0, 2, 4 -> Right side on desktop
-            return (
-              <div 
-                key={photo.year} 
-                className={`relative flex flex-col md:flex-row md:items-center md:justify-between ${
-                  !isRightSide ? "md:flex-row-reverse" : ""
-                }`}
-              >
-                {/* Desktop: Empty space to force the card to one side */}
-                <div className="hidden md:block md:w-[45%]" />
-
-                {/* The Timeline Node */}
-                <div className="absolute left-[39px] md:left-1/2 -translate-x-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-[#fdf8f5] shadow-[0_0_0_6px_#fdf8f5] z-10 top-2 md:top-1/2 md:-translate-y-1/2">
-                  <div 
-                    className="h-3 w-3 rounded-full"
-                    style={{ background: "linear-gradient(135deg, #b5a0d5, #d4516e)" }}
-                  />
-                </div>
-
-                {/* The Card */}
-                <div className={`relative w-full pl-[80px] md:pl-0 md:w-[45%] transition-all duration-500 hover:-translate-y-2 group`}>
-                  
-                  {/* Connecting Line (Desktop Only) */}
-                  <div 
-                    className={`hidden md:block absolute top-1/2 h-px w-[calc(11.111vw-3rem)] max-w-[4rem] bg-lavender-deep/30 -translate-y-1/2 ${
-                      isRightSide ? "right-full" : "left-full"
-                    }`}
-                  />
-
-                  {/* Year Label */}
-                  <div className={`mb-4 flex items-center gap-4 ${isRightSide ? "md:justify-start" : "md:justify-end"}`}>
-                    <span className="font-display text-4xl font-black tracking-widest text-lavender-deep drop-shadow-sm transition-colors group-hover:text-rose">
-                      {photo.year}
-                    </span>
-                    <div className="h-px flex-1 bg-lavender-deep/10 md:hidden" />
-                  </div>
-
-                  {/* Image Frame */}
-                  <div
-                    className="relative overflow-hidden rounded-2xl shadow-xl transition-all duration-300 group-hover:shadow-2xl"
-                    style={{
-                      background: "#fffdf9",
-                      padding: "14px",
-                      border: "1px solid rgba(181,160,213,0.3)",
-                    }}
-                  >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
-                      <LightboxImage
-                        src={photo.src}
-                        alt={`Story photo from ${photo.year}`}
-                        wrapperClassName="absolute inset-0"
-                        imageClassName="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                        fill
-                        sizes="(max-width: 768px) 90vw, 45vw"
-                      />
-                    </div>
-                  </div>
-                </div>
+      {/* Grid Timeline Section */}
+      <div className="mx-auto mt-12 max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {PHOTOS.map((photo) => (
+            <div
+              key={photo.year}
+              className="group relative overflow-hidden rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
+              style={{
+                background: "#fffdf9",
+                padding: "12px",
+                border: "1px solid rgba(181,160,213,0.3)",
+              }}
+            >
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
+                <LightboxImage
+                  src={photo.src}
+                  alt={`Story photo from ${photo.year}`}
+                  wrapperClassName="absolute inset-0"
+                  imageClassName="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
               </div>
-            );
-          })}
+              
+              {/* Floating Year Badge */}
+              <div 
+                className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full px-6 py-2 backdrop-blur-md transition-transform duration-500 group-hover:-translate-y-1"
+                style={{ 
+                  background: "rgba(255, 255, 255, 0.8)", 
+                  border: "1px solid rgba(255, 255, 255, 0.6)",
+                  boxShadow: "0 4px 16px rgba(181,160,213,0.2)"
+                }}
+              >
+                <span className="font-display text-xl font-bold tracking-widest text-lavender-deep drop-shadow-sm">
+                  {photo.year}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </Section>
