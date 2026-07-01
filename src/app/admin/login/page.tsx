@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LoginForm } from "./login-form";
 import { site } from "@/config/site";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, ArrowLeft } from "lucide-react";
 
 export const metadata: Metadata = {
   title: `Admin · ${site.couple.displayName}`,
@@ -58,6 +59,16 @@ export default function AdminLoginPage() {
           </div>
         ))}
       </div>
+
+      {/* ── Back to celebration link ── */}
+      <Link
+        href="/celebration"
+        className="absolute left-5 top-5 z-20 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold text-ink/70 transition-all hover:text-ink hover:bg-white/40 backdrop-blur-sm"
+        style={{ border: "1px solid rgba(255,255,255,0.5)" }}
+      >
+        <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+        Back to site
+      </Link>
 
       {/* ── Glass card ── */}
       <div
