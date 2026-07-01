@@ -16,10 +16,12 @@ export function GlobalAudio() {
 
     const savedState = typeof window !== 'undefined' ? localStorage.getItem("wedding-audio-state") : null;
 
+    // Attempt to play immediately (often blocked by modern browsers)
     const tryPlay = () => {
       if (audioRef.current && audioRef.current.paused) {
         audioRef.current.play().then(() => {
           setIsPlaying(true);
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
           localStorage.setItem("wedding-audio-state", "playing");
           window.removeEventListener("click", tryPlay);
           window.removeEventListener("touchstart", tryPlay);
@@ -29,6 +31,31 @@ export function GlobalAudio() {
         });
       }
     };
+
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'Wedding Celebration',
+        artist: 'Jobert & April',
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (audioRef.current) {
+          audioRef.current.play().catch(() => {});
+          setIsPlaying(true);
+          navigator.mediaSession.playbackState = "playing";
+          localStorage.setItem("wedding-audio-state", "playing");
+        }
+      });
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+          navigator.mediaSession.playbackState = "paused";
+          localStorage.setItem("wedding-audio-state", "muted");
+        }
+      });
+    }
 
     // If the user explicitly muted, respect it and do NOT attach autoplay listeners
     if (savedState !== "muted") {
@@ -52,13 +79,16 @@ export function GlobalAudio() {
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
       localStorage.setItem("wedding-audio-state", "muted");
     } else {
       setIsPlaying(true);
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
       localStorage.setItem("wedding-audio-state", "playing");
       audioRef.current.play().catch((err) => {
         console.warn("Play failed", err);
         setIsPlaying(false);
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
         localStorage.setItem("wedding-audio-state", "muted");
       });
     }
