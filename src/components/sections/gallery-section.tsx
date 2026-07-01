@@ -42,7 +42,7 @@ export function GallerySection() {
       {/* Title */}
       <div className="flex flex-col items-center justify-center text-center">
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage-deep/70">
-          Memories
+          Gallery
         </p>
         <h2 className="mt-1 font-cursive text-5xl leading-tight text-sage-deep sm:text-6xl">
           Prenup Photos
@@ -52,8 +52,8 @@ export function GallerySection() {
       {/* Carousel Section */}
       <div className="relative mt-10">
         {/* Carousel */}
-        <div 
-          className="overflow-hidden border-x-2 border-white/50 relative" 
+        <div
+          className="overflow-hidden border-x-2 border-white/50 relative"
           ref={emblaRef}
         >
           <div className="flex gap-4 sm:gap-6 px-4">
@@ -61,9 +61,9 @@ export function GallerySection() {
               <div
                 key={s.n}
                 className="min-w-0 flex-[0_0_85%] sm:flex-[0_0_60%] lg:flex-[0_0_45%] transition-all duration-500 ease-out py-4"
-                style={{ 
-                  opacity: selected === s.n - 1 ? 1 : 0.5, 
-                  transform: selected === s.n - 1 ? "scale(1)" : "scale(0.92)" 
+                style={{
+                  opacity: selected === s.n - 1 ? 1 : 0.5,
+                  transform: selected === s.n - 1 ? "scale(1)" : "scale(0.92)"
                 }}
               >
                 {/* Frame wrapper */}
@@ -72,8 +72,8 @@ export function GallerySection() {
                   style={{
                     background: "#fffdf9",
                     padding: "14px",
-                    boxShadow: selected === s.n - 1 
-                      ? "0 20px 40px -8px rgba(0,0,0,0.2), 0 8px 16px -4px rgba(0,0,0,0.1)" 
+                    boxShadow: selected === s.n - 1
+                      ? "0 20px 40px -8px rgba(0,0,0,0.2), 0 8px 16px -4px rgba(0,0,0,0.1)"
                       : "0 10px 20px -5px rgba(0,0,0,0.1)",
                     border: "1px solid rgba(0,0,0,0.04)"
                   }}
