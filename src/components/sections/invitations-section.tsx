@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { LightboxImage } from "@/components/ui/lightbox";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Section } from "./section";
@@ -171,11 +171,12 @@ export function InvitationsSection() {
                         className="relative aspect-[2/3] overflow-hidden rounded-xl"
                         style={{ boxShadow: "inset 0 2px 10px rgba(0,0,0,0.05)" }}
                       >
-                        <Image
+                        <LightboxImage
                           src={src}
                           alt={`Wedding invitation ${i + 1}`}
                           fill
-                          className="object-cover"
+                          wrapperClassName="absolute inset-0 z-10"
+                          imageClassName="object-cover"
                           sizes="(max-width: 640px) 75vw, (max-width: 1024px) 50vw, 38vw"
                         />
 

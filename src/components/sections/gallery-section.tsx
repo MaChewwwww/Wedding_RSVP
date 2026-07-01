@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { LightboxImage } from "@/components/ui/lightbox";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Section } from "./section";
@@ -82,11 +82,12 @@ export function GallerySection() {
                     className="relative aspect-[4/3] overflow-hidden rounded-lg"
                     style={{ boxShadow: "inset 0 2px 10px rgba(0,0,0,0.05)" }}
                   >
-                    <Image
+                    <LightboxImage
                       src={s.src}
                       alt={`Prenup photo ${s.n}`}
                       fill
-                      className="object-cover"
+                      wrapperClassName="absolute inset-0"
+                      imageClassName="object-cover"
                       sizes="(max-width: 640px) 85vw, (max-width: 1024px) 60vw, 45vw"
                     />
                   </div>

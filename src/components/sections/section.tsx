@@ -55,7 +55,7 @@ export function Section({
       <motion.div
         initial={reduce ? false : { opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        viewport={{ once: true, amount: 0 }}
         transition={{ duration: reduce ? 0 : 0.5, ease: "easeOut" }}
         className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-20 relative z-20"
       >
