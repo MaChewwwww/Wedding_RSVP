@@ -111,7 +111,19 @@ export function SiteNavbar() {
           </ul>
 
           <div className="flex items-center gap-2">
-            <div className="hidden lg:flex lg:items-center">
+          <div className="hidden lg:flex lg:items-center lg:gap-2">
+              <Link
+                href="/rsvp"
+                className="rounded-full px-5 py-2 text-xs font-bold uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-sm"
+                style={{
+                  color: "#d4516e",
+                  background: "rgba(255,255,255,0.5)",
+                  border: "1px solid rgba(212,81,110,0.3)",
+                  backdropFilter: "blur(8px)"
+                }}
+              >
+                RSVP
+              </Link>
               <Link
                 href="/admin/login"
                 className="rounded-full px-5 py-2 text-xs font-bold uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-sm"
@@ -325,8 +337,20 @@ function MobileMenu({
           </ul>
         </nav>
 
-        {/* Footer — admin link */}
-        <div className="px-4 pb-6 pt-3" style={{ borderTop: "1px solid rgba(240,168,188,0.25)" }}>
+        {/* Footer — RSVP + admin link */}
+        <div className="px-4 pb-6 pt-3 flex flex-col gap-2" style={{ borderTop: "1px solid rgba(240,168,188,0.25)" }}>
+          <Link
+            href="/rsvp"
+            onClick={onClose}
+            className="block w-full text-center rounded-2xl px-4 py-3.5 text-sm font-bold uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            style={{
+              color: "#d4516e",
+              background: "rgba(255,255,255,0.5)",
+              border: "1px solid rgba(212,81,110,0.3)",
+            }}
+          >
+            RSVP
+          </Link>
           <Link
             href="/admin/login"
             onClick={onClose}
