@@ -72,7 +72,7 @@ export async function loadGuestAdminData(search?: string) {
   let query = db
     .from("invitation_parties")
     .select(
-      "id, display_name, status, rsvp_status, email, invitees(id, full_name, normalized_name, rsvp_status, table_id, is_active), qr_passes(id, invitee_id, status)",
+      "id, display_name, status, rsvp_status, email, responded_at, updated_at, invitees(id, full_name, normalized_name, rsvp_status, table_id, is_active), qr_passes(id, invitee_id, status)",
     )
     .order("display_name", { ascending: true });
   if (search?.trim()) query = query.ilike("display_name", `%${search.trim()}%`);

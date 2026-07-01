@@ -60,6 +60,8 @@ type Party = {
   status: string;
   rsvp_status: string;
   email: string | null;
+  responded_at: string | null;
+  updated_at: string | null;
   invitees: Invitee[] | null;
   qr_passes: Pass[] | null;
 };
@@ -69,6 +71,17 @@ const STATUS_OPTIONS = [
   { value: "attending", label: "Attending" },
   { value: "declined", label: "Not attending" },
 ];
+
+function formatDate(isoString: string | null) {
+  if (!isoString) return "—";
+  const d = new Date(isoString);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(d);
+}
 
 function StatusPill({ status }: { status: string }) {
   if (status === "attending") return <Badge variant="success">Attending</Badge>;
@@ -116,6 +129,9 @@ function GuestRow({ party }: { party: Party }) {
       </Td>
       <Td>
         <StatusPill status={guest.rsvp_status} />
+      </Td>
+      <Td className="text-sm text-muted-ink">
+        {formatDate(party.responded_at || party.updated_at)}
       </Td>
       <Td>
         {activePass ? (
@@ -397,6 +413,7 @@ export function GuestsClient({
             <tr>
               <Th>Guest</Th>
               <Th>Status</Th>
+              <Th>Last Updated</Th>
               <Th>Pass</Th>
               <Th className="text-right">Actions</Th>
             </tr>

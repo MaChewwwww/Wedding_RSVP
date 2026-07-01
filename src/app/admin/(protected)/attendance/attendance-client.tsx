@@ -233,14 +233,21 @@ export function AttendanceClient({
                 <Td className="hidden md:table-cell">{statusBadge(row.rsvp_status)}</Td>
                 <Td>
                   {row.checkedIn ? (
-                    <span className="inline-flex items-center gap-1.5 text-sage-deep">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span className="hidden md:inline text-xs">{fmt(row.lastEventAt)}</span>
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="inline-flex items-center gap-1.5 text-sage-deep">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span className="text-sm">Checked in</span>
+                      </span>
+                      {row.lastEventAt && (
+                        <span className="text-xs text-muted-ink mt-0.5 md:ml-5">
+                          {fmt(row.lastEventAt)}
+                        </span>
+                      )}
+                    </div>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 text-muted-ink">
                       <XCircle className="h-4 w-4" />
-                      <span className="hidden md:inline text-xs">Not checked in</span>
+                      <span className="text-sm">Not checked in</span>
                     </span>
                   )}
                 </Td>
