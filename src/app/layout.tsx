@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans, Great_Vibes } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { site } from "@/config/site";
 import "./globals.css";
 
@@ -41,6 +42,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col bg-paper text-ink">
         {children}
+        <Analytics />
       </body>
     </html>
   );
