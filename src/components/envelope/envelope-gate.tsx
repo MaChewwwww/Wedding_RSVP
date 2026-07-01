@@ -225,7 +225,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
   return (
     <EnvelopeContext.Provider value={{ opened, cardOpened, animating, closeEnvelope: close }}>
       <div
-      className="full-svh relative flex w-full flex-col items-center justify-center px-4"
+      className="full-svh overflow-hidden relative flex w-full flex-col items-center justify-center px-4"
       style={{
         perspective: 1000,
       }}

@@ -10,7 +10,7 @@ import { isDeadlinePassed } from "@/server/rsvp/deadline";
 export default function HomePage() {
   const rsvpOpen = !isDeadlinePassed();
   return (
-    <main className="full-svh">
+    <main className="full-svh overflow-hidden">
       <EnvelopeGate>
         <LookupForm rsvpOpen={rsvpOpen} />
       </EnvelopeGate>
