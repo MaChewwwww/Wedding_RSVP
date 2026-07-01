@@ -31,11 +31,11 @@ export default function AdminLoginPage() {
       {/* ── Floating petal accents ── */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         {[
-          { top: "8%",  left: "6%",  size: 28, delay: "0s",   dir: "left"  },
+          { top: "8%", left: "6%", size: 28, delay: "0s", dir: "left" },
           { top: "15%", left: "88%", size: 22, delay: "1.4s", dir: "right" },
-          { top: "72%", left: "4%",  size: 18, delay: "2.1s", dir: "left"  },
+          { top: "72%", left: "4%", size: 18, delay: "2.1s", dir: "left" },
           { top: "80%", left: "92%", size: 24, delay: "0.7s", dir: "right" },
-          { top: "45%", left: "2%",  size: 16, delay: "3.2s", dir: "left"  },
+          { top: "45%", left: "2%", size: 16, delay: "3.2s", dir: "left" },
           { top: "35%", left: "95%", size: 20, delay: "1.8s", dir: "right" },
         ].map((p, i) => (
           <div
@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
         style={{ border: "1px solid rgba(255,255,255,0.5)" }}
       >
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-        Back to site
+        Back to Wedding Details
       </Link>
 
       {/* ── Glass card ── */}
