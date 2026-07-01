@@ -21,7 +21,16 @@ import { Section } from "./section";
 */
 
 const ACCENT = "#c8963c";
-const IMAGES = Array.from({ length: 8 }, (_, i) => `/assets/invitations/${i + 1}.jpg`);
+const IMAGES = [
+  "/assets/invitations/1.jpg",
+  "/assets/invitations/2.jpg",
+  "/assets/invitations/3.jpg",
+  "/assets/invitations/4_2.png",
+  "/assets/invitations/5.jpg",
+  "/assets/invitations/6_2.png",
+  "/assets/invitations/7.jpg",
+  "/assets/invitations/8_2.png",
+];
 
 type CornerPos = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
