@@ -1,33 +1,19 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
-import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Section } from "./section";
+import { LightboxImage } from "@/components/ui/lightbox";
 
 /*
-  Prenup photos — Embla carousel with dot navigation and frosted-glass arrows.
-  Images live in public/assets/prenup (see scripts/optimize-gallery.ts).
+  Prenup photos — Masonry/Grid layout with year labels and Lightbox.
 */
 
-const SLIDES = Array.from({ length: 15 }, (_, i) => ({ n: i + 1, src: `/assets/prenup/${i + 1}.jpg` }));
+const PHOTOS = Array.from({ length: 12 }, (_, i) => ({
+  year: 2015 + i,
+  src: `/assets/History/${2015 + i}-JOBERT-APRIL.jpg.jpg`
+}));
 
 export function GallerySection() {
-  const [emblaRef, embla] = useEmblaCarousel({ loop: false, align: "center" });
-  const [selected, setSelected] = React.useState(0);
-
-  const scrollPrev = React.useCallback(() => embla?.scrollPrev(), [embla]);
-  const scrollNext = React.useCallback(() => embla?.scrollNext(), [embla]);
-
-  React.useEffect(() => {
-    if (!embla) return;
-    const onSelect = () => setSelected(embla.selectedScrollSnap());
-    embla.on("select", onSelect);
-    onSelect();
-    return () => { embla.off("select", onSelect); };
-  }, [embla]);
-
   return (
     <Section
       id="gallery"
@@ -44,111 +30,48 @@ export function GallerySection() {
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage-deep/70">
           Gallery
         </p>
-        <h2 className="mt-1 font-cursive text-5xl leading-tight text-sage-deep sm:text-6xl">
-          Prenup Photos
+        <h2 className="mt-1 font-cursive text-5xl leading-tight text-sage-deep sm:text-6xl text-balance">
+          Our Journey
         </h2>
       </div>
 
-      {/* Carousel Section */}
-      <div className="relative mt-10">
-        {/* Carousel */}
-        <div
-          className="overflow-hidden border-x-2 border-white/50 relative"
-          ref={emblaRef}
-        >
-          <div className="flex gap-4 sm:gap-6 px-4">
-            {SLIDES.map((s) => (
-              <div
-                key={s.n}
-                className="min-w-0 flex-[0_0_85%] sm:flex-[0_0_60%] lg:flex-[0_0_45%] transition-all duration-500 ease-out py-4"
-                style={{
-                  opacity: selected === s.n - 1 ? 1 : 0.5,
-                  transform: selected === s.n - 1 ? "scale(1)" : "scale(0.92)"
+      {/* Grid Section */}
+      <div className="mx-auto mt-12 max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {PHOTOS.map((photo) => (
+            <div
+              key={photo.year}
+              className="group relative overflow-hidden rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+              style={{
+                background: "#fffdf9",
+                padding: "12px",
+                border: "1px solid rgba(143,188,139,0.2)",
+              }}
+            >
+              <LightboxImage
+                src={photo.src}
+                alt={`Prenup photo from ${photo.year}`}
+                wrapperClassName="relative aspect-[4/3] w-full overflow-hidden rounded-xl"
+                imageClassName="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              />
+              
+              <div 
+                className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full px-6 py-2 backdrop-blur-md"
+                style={{ 
+                  background: "rgba(255, 255, 255, 0.75)", 
+                  border: "1px solid rgba(255, 255, 255, 0.6)",
+                  boxShadow: "0 4px 16px rgba(90,156,86,0.15)"
                 }}
               >
-                {/* Frame wrapper */}
-                <div
-                  className="rounded-xl shadow-xl mx-auto transition-all duration-500"
-                  style={{
-                    background: "#fffdf9",
-                    padding: "14px",
-                    boxShadow: selected === s.n - 1
-                      ? "0 20px 40px -8px rgba(0,0,0,0.2), 0 8px 16px -4px rgba(0,0,0,0.1)"
-                      : "0 10px 20px -5px rgba(0,0,0,0.1)",
-                    border: "1px solid rgba(0,0,0,0.04)"
-                  }}
-                >
-                  <div
-                    className="relative aspect-[4/3] overflow-hidden rounded-lg"
-                    style={{ boxShadow: "inset 0 2px 10px rgba(0,0,0,0.05)" }}
-                  >
-                    <Image
-                      src={s.src}
-                      alt={`Prenup photo ${s.n}`}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 85vw, (max-width: 1024px) 60vw, 45vw"
-                    />
-                  </div>
-                </div>
+                <span className="font-display text-lg font-bold tracking-widest text-sage-deep">
+                  {photo.year}
+                </span>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-
-        {/* Arrow buttons - absolutely positioned alongside the cards */}
-        <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between pointer-events-none px-1 sm:px-4">
-          <button
-            type="button"
-            aria-label="Previous image"
-            onClick={scrollPrev}
-            className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-105"
-            style={{
-              background: "rgba(255, 255, 255, 0.95)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(143,188,139,0.35)",
-              boxShadow: "0 4px 16px rgba(90,156,86,0.2)",
-            }}
-          >
-            <ChevronLeft className="h-6 w-6 text-sage-deep ml-[-2px]" aria-hidden />
-          </button>
-          <button
-            type="button"
-            aria-label="Next image"
-            onClick={scrollNext}
-            className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-105"
-            style={{
-              background: "rgba(255, 255, 255, 0.95)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(143,188,139,0.35)",
-              boxShadow: "0 4px 16px rgba(90,156,86,0.2)",
-            }}
-          >
-            <ChevronRight className="h-6 w-6 text-sage-deep mr-[-2px]" aria-hidden />
-          </button>
-        </div>
-      </div>
-
-      {/* Dot indicators */}
-      <div className="mt-5 flex items-center justify-center gap-2" aria-live="polite" aria-label={`Photo ${selected + 1} of ${SLIDES.length}`}>
-        {SLIDES.map((s) => (
-          <button
-            key={s.n}
-            type="button"
-            aria-label={`Go to photo ${s.n}`}
-            onClick={() => embla?.scrollTo(s.n - 1)}
-            className="transition-all duration-300"
-            style={{
-              width: selected === s.n - 1 ? 24 : 8,
-              height: 8,
-              borderRadius: 99,
-              background: selected === s.n - 1
-                ? "linear-gradient(to right, #5a9c56, #8fbc8b)"
-                : "rgba(90,156,86,0.3)",
-              border: "none",
-            }}
-          />
-        ))}
       </div>
     </Section>
   );

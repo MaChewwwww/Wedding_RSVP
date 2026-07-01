@@ -111,9 +111,6 @@ export function InvitationsSection() {
     >
       {/* Title */}
       <div className="text-center">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-butter-deep/70">
-          Wedding Invitation
-        </p>
         <h2 className="mt-1 font-cursive text-5xl leading-tight text-gold sm:text-6xl">
           Invitations
         </h2>

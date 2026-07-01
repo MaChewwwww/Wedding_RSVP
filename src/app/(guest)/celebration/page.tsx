@@ -61,13 +61,13 @@ export default async function CelebrationPage() {
 
         <SectionDivider />
 
-        {/* ── Featured / Jobert & April (couple hero BG) ─────────────── */}
-        <FeaturedSection />
+        {/* ── Gallery (sage/green gradient) ─────────────────────────── */}
+        <GallerySection />
 
         <SectionDivider />
 
-        {/* ── Gallery (sage/green gradient) ─────────────────────────── */}
-        <GallerySection />
+        {/* ── Featured / Jobert & April (couple hero BG) ─────────────── */}
+        <FeaturedSection />
 
         <SectionDivider />
 
