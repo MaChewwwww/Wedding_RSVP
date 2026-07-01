@@ -116,6 +116,38 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
   if (stage === "success") {
     const isAttending = party?.guest.rsvpStatus === "attending" || passes.length > 0;
 
+    const handleDownloadQR = async (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (!passes[0]?.qrDataUrl || !party) return;
+
+      const fileName = `wedding-pass-${party.guest.fullName.replace(/\\s+/g, "-").toLowerCase()}.png`;
+
+      try {
+        // Try Native Share API first (bypasses Messenger/Instagram download blocks)
+        const res = await fetch(passes[0].qrDataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], fileName, { type: "image/png" });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: "Wedding Pass",
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn("Share API failed, falling back to standard download", err);
+      }
+
+      // Fallback: Programmatic download
+      const link = document.createElement("a");
+      link.href = passes[0].qrDataUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
     return (
       <div className="w-full space-y-2 text-center">
         <motion.div
@@ -188,14 +220,14 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
                 Present this QR code at check-in.
               </p>
               {passes[0]?.qrDataUrl && (
-                <a
-                  href={passes[0].qrDataUrl}
-                  download={`wedding-pass-${party?.guest.fullName.replace(/\s+/g, "-").toLowerCase()}.png`}
-                  className="mt-2 w-10 h-10 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-sm transition-all duration-200 flex items-center justify-center mx-auto"
-                  title="Download QR Pass"
+                <button
+                  onClick={handleDownloadQR}
+                  type="button"
+                  className="mt-2 w-10 h-10 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-sm transition-all duration-200 flex items-center justify-center mx-auto cursor-pointer"
+                  title="Save QR Pass"
                 >
                   <Download className="w-4 h-4" />
-                </a>
+                </button>
               )}
             </div>
           </motion.div>
