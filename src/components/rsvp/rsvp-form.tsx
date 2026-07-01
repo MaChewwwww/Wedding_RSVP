@@ -32,6 +32,7 @@ export function RsvpForm({ party }: { party: PartyView }) {
     submitRsvpAction,
     initial,
   );
+  const [attendanceState, setAttendanceState] = React.useState<string>("");
 
   React.useEffect(() => {
     if (state.status === "success") router.push("/pass");
@@ -64,11 +65,8 @@ export function RsvpForm({ party }: { party: PartyView }) {
                 type="radio"
                 name={`attendance:${party.guest.id}`}
                 value={choice.value}
-                defaultChecked={
-                  party.guest.rsvpStatus === choice.value ||
-                  (party.guest.rsvpStatus === "pending" &&
-                    choice.value === "undecided")
-                }
+                checked={attendanceState === choice.value}
+                onChange={(e) => setAttendanceState(e.target.value)}
                 className="accent-focus"
               />
               {choice.label}
@@ -109,7 +107,7 @@ export function RsvpForm({ party }: { party: PartyView }) {
         </p>
       )}
 
-      <Button type="submit" size="lg" disabled={pending} className="w-full">
+      <Button type="submit" size="lg" disabled={pending || attendanceState === ""} className="w-full">
         {pending ? "Saving…" : "Submit RSVP"}
       </Button>
     </form>

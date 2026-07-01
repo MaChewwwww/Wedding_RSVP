@@ -7,7 +7,6 @@ import { nameLookupSchema } from "@/server/rsvp/schema";
 import { lookupInvitation } from "@/server/matching/lookup";
 import { searchInvitations } from "@/server/matching/search";
 import { createGuestSession } from "@/server/session/guest-session";
-import { loadPartyConfirmation } from "@/server/matching/confirmation";
 import {
   clearPendingInvitation,
   getPendingInvitationPartyId,
@@ -26,10 +25,7 @@ import { logger } from "@/lib/logger";
 
 export type LookupActionState =
   | { status: "idle" }
-  | {
-      status: "confirmation";
-      guestName: string;
-    }
+  | { status: "success" }
   | { status: "ambiguous" }
   | { status: "not_found" }
   | { status: "rate_limited" }
@@ -81,11 +77,8 @@ export async function lookupAction(
     });
 
     if (result.outcome === "matched") {
-      const confirmation = await loadPartyConfirmation(result.partyId);
-      if (!confirmation) return { status: "not_found" };
-
-      await setPendingInvitation(result.partyId);
-      return { status: "confirmation", ...confirmation };
+      await createGuestSession(result.partyId);
+      return { status: "success" };
     }
     if (result.outcome === "ambiguous") return { status: "ambiguous" };
     return { status: "not_found" };

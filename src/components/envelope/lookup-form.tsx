@@ -6,13 +6,10 @@ import { useRouter } from "next/navigation";
 import { Download } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  searchInvitationsAction,
-  selectInvitationAction,
   getPartyAction,
   loadPassesAction,
-  type SearchActionState,
-  type SelectInvitationState,
-  type SearchCandidateView,
+  lookupAction,
+  type LookupActionState,
 } from "@/app/(guest)/actions";
 import {
   submitRsvpAction,
@@ -27,8 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { site } from "@/config/site";
 import { useEnvelope } from "@/components/envelope/envelope-gate";
 
-const initialSearch: SearchActionState = { status: "idle" };
-const initialSelect: SelectInvitationState = { status: "idle" };
+const initialLookup: LookupActionState = { status: "idle" };
 const initialRsvp: RsvpActionState = { status: "idle" };
 
 const CHOICES = [
@@ -41,29 +37,21 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
   const router = useRouter();
   const env = useEnvelope();
 
-  const [stage, setStage] = React.useState<"lookup" | "select" | "rsvp" | "success">("lookup");
-  const [searchAgain, setSearchAgain] = React.useState(false);
-  const [selectedPartyId, setSelectedPartyId] = React.useState<string | null>(null);
+  const [stage, setStage] = React.useState<"lookup" | "rsvp" | "success">("lookup");
   const [searchedName, setSearchedName] = React.useState("");
   const [party, setParty] = React.useState<PartyView | null>(null);
   const [passes, setPasses] = React.useState<PassView[]>([]);
-  const [attendanceState, setAttendanceState] = React.useState<string>("undecided");
+  const [attendanceState, setAttendanceState] = React.useState<string>("");
 
   React.useEffect(() => {
     if (env && !env.opened) {
       setStage("lookup");
-      setSearchAgain(true);
-      setSelectedPartyId(null);
       setParty(null);
     }
   }, [env?.opened]);
-  const [search, searchFormAction, searchPending] = useActionState(
-    searchInvitationsAction,
-    initialSearch,
-  );
-  const [selection, selectFormAction, selectPending] = useActionState(
-    selectInvitationAction,
-    initialSelect,
+  const [lookup, lookupFormAction, lookupPending] = useActionState(
+    lookupAction,
+    initialLookup,
   );
   const [rsvpState, rsvpFormAction, rsvpPending] = useActionState(
     submitRsvpAction,
@@ -71,34 +59,20 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
   );
 
 
-  // Stage 1 -> Stage 2 (results list)
+  // Stage 1 -> Stage 2 (rsvp form)
   React.useEffect(() => {
-    if (search.status === "results" && !searchAgain) {
-      setStage("select");
-      setSelectedPartyId((prev) =>
-        prev && search.candidates.some((c) => c.partyId === prev)
-          ? prev
-          : (search.candidates[0]?.partyId ?? null),
-      );
-    } else {
-      setStage("lookup");
-    }
-  }, [search, searchAgain]);
-
-  // Stage 2 -> Stage 3
-  React.useEffect(() => {
-    if (selection.status === "success") {
+    if (lookup.status === "success") {
       getPartyAction().then((p) => {
         if (p) {
           setParty(p);
-          setAttendanceState(p.guest.rsvpStatus === "pending" ? "undecided" : p.guest.rsvpStatus);
+          setAttendanceState("");
           setStage("rsvp");
         } else {
           setStage("lookup");
         }
       });
     }
-  }, [selection]);
+  }, [lookup]);
 
   // Stage 3 -> Stage 4
   React.useEffect(() => {
@@ -376,7 +350,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
             type="submit"
             size="default"
             className="w-full h-12 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-950/20 hover:shadow-lg hover:shadow-rose-950/30 font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200"
-            disabled={rsvpPending}
+            disabled={rsvpPending || attendanceState === ""}
           >
             {rsvpPending ? "Saving RSVP..." : "Submit RSVP"}
           </Button>
@@ -385,96 +359,13 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
     );
   }
 
-  if (stage === "select" && search.status === "results") {
-    const candidates: SearchCandidateView[] = search.candidates;
-    return (
-      <form action={selectFormAction} className="w-full space-y-5">
-        <input type="hidden" name="fullName" value={searchedName} />
-        <input type="hidden" name="partyId" value={selectedPartyId ?? ""} />
-
-        <motion.div
-          className="text-center select-none space-y-1"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-        >
-          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-rose-600/90">
-            Select Your Name
-          </p>
-          <h3 className="font-display text-xl font-bold text-ink leading-tight">
-            Which one is you?
-          </h3>
-        </motion.div>
-
-        <div
-          role="radiogroup"
-          aria-label="Matching invitations"
-          className="max-h-[40dvh] space-y-2 overflow-y-auto pr-1"
-        >
-          {candidates.map((c) => {
-            const isSel = selectedPartyId === c.partyId;
-            return (
-              <label
-                key={c.partyId}
-                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border-2 bg-white/80 px-4 py-3 text-sm font-semibold text-rose-900 transition-all has-[:checked]:border-rose-400 has-[:checked]:bg-rose-100/70 focus-within:ring-2 focus-within:ring-rose-300"
-                style={{ borderColor: isSel ? "#fb7185" : "rgba(251,113,133,0.25)" }}
-              >
-                <input
-                  type="radio"
-                  name="candidate"
-                  value={c.partyId}
-                  checked={isSel}
-                  onChange={() => setSelectedPartyId(c.partyId)}
-                  className="accent-rose-500"
-                />
-                <span className="min-w-0 break-words">{c.guestName}</span>
-              </label>
-            );
-          })}
-        </div>
-
-        {(selection.status === "invalid" ||
-          selection.status === "unconfigured" ||
-          selection.status === "error") && (
-            <p role="alert" className="rounded-xl bg-rose/5 border border-rose/15 px-3.5 py-2 text-xs text-rose/90 leading-normal text-center">
-              {selection.status === "invalid"
-                ? "Please pick your name from the list, or search again."
-                : selection.status === "unconfigured"
-                  ? "The invitation service isn't available yet."
-                  : selection.message}
-            </p>
-          )}
-
-        <div className="space-y-2 pt-1">
-          <Button
-            type="submit"
-            size="default"
-            className="w-full h-12 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-950/20 hover:shadow-lg hover:shadow-rose-950/30 font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200"
-            disabled={selectPending || !selectedPartyId}
-          >
-            {selectPending ? "Confirming…" : "This is me — continue"}
-          </Button>
-
-          <button
-            type="button"
-            className="min-h-9 w-full text-xs text-muted-ink hover:text-rose-600 transition-colors font-medium flex items-center justify-center gap-1 select-none underline underline-offset-4"
-            onClick={() => setSearchAgain(true)}
-          >
-            Search again
-          </button>
-        </div>
-      </form>
-    );
-  }
-
-  // Screen 1: Lookup / Search Form
-  const message = messageFor(search);
+  // Screen 1: Lookup Form
+  const message = messageFor(lookup);
 
   return (
     <form
-      action={searchFormAction}
+      action={lookupFormAction}
       onSubmit={(e) => {
-        setSearchAgain(false);
         const value = new FormData(e.currentTarget).get("fullName");
         setSearchedName(typeof value === "string" ? value : "");
       }}
@@ -517,7 +408,7 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
           maxLength={120}
           placeholder="e.g. Maria Santos"
           aria-describedby={message ? "lookup-message" : undefined}
-          disabled={searchPending}
+          disabled={lookupPending}
           className="h-12 text-center text-base px-4 bg-gradient-to-b from-white to-rose-50/40 border-4 border-rose-300 rounded-full focus:bg-rose-50/30 focus:border-rose-400 focus:ring-2 focus:ring-rose-400/50 transition-all duration-200 text-ink placeholder:text-muted-ink/65"
         />
       </motion.div>
@@ -542,9 +433,9 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
           type="submit"
           size="default"
           className="w-full h-12 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-950/20 hover:shadow-lg hover:shadow-rose-950/30 font-semibold tracking-[0.1em] text-xs uppercase transition-all duration-200"
-          disabled={searchPending}
+          disabled={lookupPending}
         >
-          {searchPending ? "Searching…" : "Search My Invitation"}
+          {lookupPending ? "Searching…" : "Search My Invitation"}
         </Button>
       </motion.div>
 
@@ -560,10 +451,12 @@ export function LookupForm({ rsvpOpen }: { rsvpOpen: boolean }) {
   );
 }
 
-function messageFor(state: SearchActionState): string | null {
+function messageFor(state: LookupActionState): string | null {
   switch (state.status) {
-    case "empty":
+    case "not_found":
       return "We couldn't find a match. Check the spelling or try the exact name on your invitation.";
+    case "ambiguous":
+      return "There are multiple names matching this. Please enter your full name exactly as it appears on your invitation.";
     case "rate_limited":
       return "Too many attempts. Please wait a moment and try again.";
     case "closed":
