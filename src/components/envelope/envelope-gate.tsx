@@ -225,7 +225,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
   return (
     <EnvelopeContext.Provider value={{ opened, cardOpened, animating, closeEnvelope: close }}>
       <div
-      className="full-svh relative flex w-full flex-col items-center justify-center overflow-hidden px-4"
+      className="full-svh relative flex w-full flex-col items-center justify-center px-4"
       style={{
         perspective: 1000,
       }}
@@ -399,7 +399,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
             <motion.div
               className="absolute left-0 right-0 text-center select-none z-30 pointer-events-none"
               style={{
-                top: isMobile ? "-90px" : "-115px",
+                top: isMobile ? "-135px" : "-160px",
                 transformStyle: "preserve-3d",
               }}
               initial={{
@@ -449,7 +449,7 @@ export function EnvelopeGate({ children }: { children: React.ReactNode }) {
                 ))}
               </h1>
               <motion.p
-                className="font-sans text-[11px] sm:text-xs font-bold tracking-[0.35em] text-blush-deep/80 uppercase mt-2"
+                className="font-sans text-xs sm:text-sm font-bold tracking-[0.35em] text-blush-deep/80 uppercase mt-3"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.15 + titleLetters.length * 0.04 }}
